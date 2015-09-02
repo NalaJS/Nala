@@ -82,7 +82,7 @@ addUser: function(event){
 
 userSignup: function(user){
   var query = {
-    'query' : 'mutation updateUser{addUser}',
+    'query' : 'mutation updateUser{addUser(name:"'+user.name+'",age:'+user.age+'){name,age}}',//'mutation updateUser{addUser}',
     'variables' : {'user': String(user.name), 'age':user.age}
   };
 

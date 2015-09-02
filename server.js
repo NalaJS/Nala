@@ -14,11 +14,11 @@ app.use(bodyParser.urlencoded());
 
 async function graphQLHandler(req, res){
   //console.log('before:'+req.body);
-  console.log('a req.body.query: '+ req.body.query);
-  console.log('a req.body.variables: '+req.body.variables);
+  // console.log('a req.body.query: '+ req.body.query);
+  // console.log('a req.body.variables: '+req.body.variables);
   const {query, variables = {}} = req.body;
-  console.log('b query: '+ query);
-  console.log('b req.body.variables: '+req.body.variables);
+  // console.log('b query: '+ query);
+  // console.log('b req.body.variables: '+req.body.variables);
   //console.log('after'+req.body);
   const result = await graphql(
     Schema,

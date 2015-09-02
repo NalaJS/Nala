@@ -63,6 +63,9 @@ let RootMutation = new GraphQLObjectType({
       resolve: (root, {name, age})=>{
       //add to database
       console.log("add user mutation");
+      console.log('root: ' + Object.keys(root));
+      console.log('name: ' + name + ' age:' + age);
+      //database returns userobject added
       return {
         name: 'Success',
         age: 23
