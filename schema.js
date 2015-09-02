@@ -5,12 +5,6 @@ import {
   GraphQLString,
 } from 'graphql';
 
-// let dummyData = {
-//   '1' : 'Alex',
-//   '2' : 'Bob',
-//   '3' : 'Carol'
-// };
-
 let userType = new GraphQLObjectType({
     name: 'user',
     fields : {
@@ -34,8 +28,14 @@ let RootQuery = new GraphQLObjectType({
   fields: {
     getUser:{
       type: userType,
-      resolve: ()=>{
+      description: 'get user object with provided name',
+      args: {
+        name: {type: GraphQLString}
+      },
+      resolve: (root, {name})=>{
+        console.log("Query got name: "+name);
       /*console.log("get user query");*/
+      //find user with the provided name and return the userobject
       return {
         name: 'Tom',
         age: 23
@@ -62,9 +62,9 @@ let RootMutation = new GraphQLObjectType({
       description: 'returns user object',
       resolve: (root, {name, age})=>{
       //add to database
-      console.log("add user mutation");
-      console.log('root: ' + Object.keys(root));
-      console.log('name: ' + name + ' age:' + age);
+      // console.log("add user mutation");
+      // console.log('root: ' + Object.keys(root));
+      // console.log('name: ' + name + ' age:' + age);
       //database returns userobject added
       return {
         name: 'Success',
@@ -72,7 +72,7 @@ let RootMutation = new GraphQLObjectType({
       }
     }
     },
-    getBlogpost:{
+    addBlogpost:{
       type: blogpostType,
       resolve: ()=>{console.log("get blogpost query");}
     }

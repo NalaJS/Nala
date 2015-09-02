@@ -9,15 +9,15 @@ var Page = React.createClass({
     return {name: "",
     age:"",
     friend:'',
-    loginName:"",
+    searchName:"",
     displayName:"",
     displayAge:""
     } ;
   },
-handleChangeloginName: function(event) {
+handleChangesearchName: function(event) {
       //console.log('handle');
       this.setState({
-        loginName: event.target.value
+        searchName: event.target.value
       })
   },
 
@@ -40,81 +40,34 @@ handleChangeFriend: function(event) {
     })
   },
 
-getUserAge: function(event){
+getUser: function(event){
+  console.log("get user");
   event.preventDefault();
-  //.log("send name being run");
-  var data = {'name' :this.state.loginName};
-  //console.log('getUserAgedata:', data);
-  this.userAge(data);
+  var user = {'name' :this.state.searchName};
+  var query = {
+      'query' : 'query getUser{getUser(name: " '+user.name+'"){name,age}}'
+  }
+  $.post('/', query, function(response){
+    console.log("get user response");
+  });
 },
-
-userAge: function(user){
-    console.log('user:', user);
-    $.ajax({
-      dataType: 'json', //dataType requests json
-      contentType: 'application/json', //contentType sends json
-      type: 'POST',
-      url: '/age',
-      data: JSON.stringify(user),
-      success: function(data){
-        //console.log('return age data', data);
-        this.setState ({
-          displayAge:data.age
-        });
-        console.log(this.state.displayAge);
-        this.setState({
-          displayName:data.name
-        });
-      }.bind(this),
-      error: function(xhr, status, err){
-        console.error('/age', status, err.toString());
-      }.bind(this)
-    });
-},
-
 
 addUser: function(event){
   event.preventDefault();
-  var data  = {'name' :this.state.name, 'age' :this.state.age};
-  console.log('data:', data);
-  this.userSignup(data);
-},
-
-userSignup: function(user){
+  var user  = {'name' :this.state.name, 'age' :this.state.age};
+  console.log('updated!');
+  console.log('user:', user);
   var query = {
     'query' : 'mutation updateUser{addUser(name:"'+user.name+'",age:'+user.age+'){name,age}}',//'mutation updateUser{addUser}',
-    'variables' : {'user': String(user.name), 'age':user.age}
+    //'variables' : {'user': String(user.name), 'age':user.age}
   };
 
-  console.log(query);
   $.post('/', query, function(response){
     console.log("user signup response");
   });
-
-  // graphql(Schema, `{
-  //   getUser {
-  //     name,
-  //     age
-  //   }
-  // }`).then((result)=>console.log(result));
-    // $.ajax({
-    //   //dataType: 'json', //dataType requests json
-    //   contentType: 'application/json', //contentType sends json
-    //   type: 'POST',
-    //   url: '/user',
-    //   data: JSON.stringify(user),
-    //   success: function(data){
-    //     console.log(data);
-    //   }.bind(this),
-    //   error: function(xhr, status, err){
-    //     console.error('/user', status, err.toString());
-    //   }.bind(this)
-    // });
 },
 
-
 render: function() {
-  //console.log("renderannnnnggggg");
 	return (
 	      <div>
         Add User
@@ -127,7 +80,7 @@ render: function() {
           </form>
           Get User
           <form onSubmit = {this.getUser}>
-              <input type = "text"  loginName = {this.state.loginName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeloginName}/>
+              <input type = "text"  searchName = {this.state.searchName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangesearchName}/>
               <button> Enter </button>
           </form>
           Returned Data:
