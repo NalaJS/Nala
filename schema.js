@@ -27,7 +27,7 @@ let RootQuery = new GraphQLObjectType({
   description: 'this is the root query',
   fields: {
     getUser:{
-      type: userType,
+      type: GraphQLString,
       description: 'get user object with provided name',
       args: {
         name: {type: GraphQLString}
@@ -36,10 +36,11 @@ let RootQuery = new GraphQLObjectType({
         console.log("Query got name: "+name);
       /*console.log("get user query");*/
       //find user with the provided name and return the userobject
-      return {
-        name: 'Tom',
-        age: 23
-      }
+      return "hiya";
+      // return {
+      //   name: 'Tom',
+      //   age: 23
+      // }
     }
     },
     getBlogpost:{
@@ -62,15 +63,26 @@ let RootMutation = new GraphQLObjectType({
       description: 'returns user object',
       resolve: (root, {name, age})=>{
       //add to database
-      // console.log("add user mutation");
-      // console.log('root: ' + Object.keys(root));
-      // console.log('name: ' + name + ' age:' + age);
       //database returns userobject added
       return {
         name: 'Success',
         age: 23
       }
     }
+    },
+    updateUser:{
+      type: userType,
+      description: 'finds user of Name, and updates his/her Age',
+      args:{
+        name: {type: GraphQLString},
+        age: {type: GraphQLInt}
+      },
+      resolve: (root,{name,age})=>{
+        return {
+          name:"Updated!",
+          age:42
+        }
+      }
     },
     addBlogpost:{
       type: blogpostType,
