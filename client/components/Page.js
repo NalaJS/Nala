@@ -13,7 +13,8 @@ var Page = React.createClass({
     displayName:"",
     displayAge:"",
     updateName:"",
-    updateAge:""
+    updateAge:"",
+    deleteName:""
     } ;
   },
 handleChangeSearchName: function(event) {
@@ -59,10 +60,10 @@ getUser: function(event){
   event.preventDefault();
   var user = {'name' :this.state.searchName};
   var query = {
-      'query' : 'query getUser{getUser(name: " '+user.name+'")}'
+      'query' : 'query getUser{getUser(name: " '+user.name+'"){name, age}}'
   }
   $.post('/', query, function(response){
-    console.log("get user response");
+    console.log("getUser returned: "+response);
   });
 },
 
@@ -77,7 +78,7 @@ addUser: function(event){
   };
 
   $.post('/', query, function(response){
-    console.log("user signup response");
+    console.log("addUser returned: "+response);
   });
 },
 
@@ -92,14 +93,25 @@ updateUser: function(event){
   };
 
   $.post('/', query, function(response){
-    console.log("user update response");
+    console.log("updateUser returned: " + response);
+  });
+},
+
+deleteUser: function(event){
+  event.preventDefault();
+  var user = {'name' : this.state.deleteName};
+  var query = {
+    'query' : 'mutation updateUser{deleteUser(name:"' + user.name + '"){name,age}}',
+  };
+  $.post('/', query, function(data){
+    console.log('deleteUser returned: ' + data);
   });
 },
 
 render: function() {
 	return (
 	      <div>
-        Add User
+        Create User
           <form onSubmit = {this.addUser}>
               <input type = "text"  name = {this.state.name} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeName}/>
               <br/>
@@ -107,7 +119,7 @@ render: function() {
                <br/><br/>
               <button> Add </button>
           </form>
-          Get User
+          Retrieve User
           <form onSubmit = {this.getUser}>
               <input type = "text"  searchName = {this.state.searchName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeSearchName}/>
               <br/><br/>
@@ -121,6 +133,13 @@ render: function() {
               <br/><br/>
               <button> Update </button>
           </form>
+          Delete User
+          <form onSubmit = {this.deleteUser}>
+              <input type = "text"  searchName = {this.state.deleteName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeDeleteName}/>
+              <br/><br/>
+              <button> Delete </button>
+          </form>
+
           Returned Data:
           <p>
           Name:{this.state.displayName} <br/>
