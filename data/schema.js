@@ -1,9 +1,34 @@
+//import User from './models/UserSchema.js';
+import Sequelize from 'sequelize';
+
 import {
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLInt,
   GraphQLString,
 } from 'graphql';
+
+var sequelize = new Sequelize('postgres://localhost/test');
+
+let User = sequelize.define('users', {
+
+  name: {
+    type: Sequelize.STRING,
+    field: 'name'
+  },
+  age: {
+    type: Sequelize.INTEGER,
+    field: 'age'
+  },
+  friend: {
+    type: Sequelize.STRING,
+    field: 'friend'
+  }
+}, {
+  freezeTableName: true
+});
+
+User.sync();
 
 let userType = new GraphQLObjectType({
     name: 'user',
@@ -22,27 +47,35 @@ let blogpostType = new GraphQLObjectType({
   }
 });
 
+let UserQueries = {
+  getUser:{
+    type: userType,
+    description: 'get user object with provided name',
+    args: {
+      name: {type: GraphQLString}
+    },
+    //resolve: User.getUserByName
+    resolve: (root, {name})=>{
+      //make get request to database
+      //return userType
+      User
+        .findOne({
+          where: { name : name }
+        })
+        .then(function(user){
+          console.log('user;', user);
+          //resolve(user);
+        })
+    }
+  },
+  //getUsers:{...}
+};
+
 let RootQuery = new GraphQLObjectType({
   name: 'query',
   description: 'this is the root query',
   fields: {
-    getUser:{
-      type: userType,
-      description: 'get user object with provided name',
-      args: {
-        name: {type: GraphQLString}
-      },
-      resolve: (root, {name})=>{
-        console.log("Query got name: "+name);
-      /*console.log("get user query");*/
-      //find user with the provided name and return the userobject
-      // return "hiya";
-      return {
-        name: 'Retrieved!',
-        age: 2
-      }
-    }
-    },
+    getUser: UserQueries.getUser,
     getBlogpost:{
       type: blogpostType,
       resolve: ()=>{console.log("get blogpost query");}
@@ -64,10 +97,25 @@ let RootMutation = new GraphQLObjectType({
       resolve: (root, {name, age})=>{
       //add to database
       //database returns userobject added
-      return {
-        name: 'Created!',
-        age: 1
-      }
+      var data;
+      User
+        .findOrCreate({
+          where: {
+            name : name
+          },
+          defaults:{
+            age: age,
+            //friend: req.body.friend
+          }
+        }).spread(function(user, created){
+          console.log("findOrCreate User returned: ",user.get({
+            plain:true
+          }));
+          data = user;
+        })
+        console.log("findOrCreate:::");
+        console.log(data);
+        return data;
     }
     },
     updateUser:{
@@ -91,6 +139,7 @@ let RootMutation = new GraphQLObjectType({
         name: {type: GraphQLString}
       },
       resolve: (root, {name})=>{
+        console.log('de');
         return {
           name: "Deleted!",
           age: 4

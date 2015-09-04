@@ -93,7 +93,8 @@ updateUser: function(event){
   };
 
   $.post('/', query, function(response){
-    console.log("updateUser returned: " + response);
+
+    //console.log("updateUser returned: " + response);
   });
 },
 
@@ -104,7 +105,9 @@ deleteUser: function(event){
     'query' : 'mutation updateUser{deleteUser(name:"' + user.name + '"){name,age}}',
   };
   $.post('/', query, function(data){
-    console.log('deleteUser returned: ' + data);
+    console.log('DELETED');
+    console.log('deleteUser returned: ');
+    console.dir(data);
   });
 },
 
