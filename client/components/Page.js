@@ -30,6 +30,13 @@ handleChangeName: function(event) {
       name: event.target.value
     })
   },
+
+  handleChangeDeleteName: function(event) {
+      //console.log('handle');
+      this.setState({
+        deleteName: event.target.value
+      })
+    },
 handleChangeAge: function(event) {
     //console.log('handle');
     this.setState({
@@ -56,14 +63,15 @@ handleChangeFriend: function(event) {
   },
 
 getUser: function(event){
-  console.log("get user");
   event.preventDefault();
   var user = {'name' :this.state.searchName};
   var query = {
-      'query' : 'query getUser{getUser(name: " '+user.name+'"){name, age}}'
+      'query' : 'query getUser{getUser(name:"'+user.name+'"){name, age}}'
   }
   $.post('/', query, function(response){
-    console.log("getUser returned: "+response);
+    console.log('getUser returned: ');
+    console.log(response);
+    console.dir(response);
   });
 },
 
@@ -78,7 +86,8 @@ addUser: function(event){
   };
 
   $.post('/', query, function(response){
-    console.log("addUser returned: "+response);
+    console.log('addUser returned: ');
+    console.dir(response);
   });
 },
 
@@ -93,7 +102,8 @@ updateUser: function(event){
   };
 
   $.post('/', query, function(response){
-
+    console.log('updateUser returned: ');
+    console.dir(response);
     //console.log("updateUser returned: " + response);
   });
 },
@@ -105,7 +115,6 @@ deleteUser: function(event){
     'query' : 'mutation updateUser{deleteUser(name:"' + user.name + '"){name,age}}',
   };
   $.post('/', query, function(data){
-    console.log('DELETED');
     console.log('deleteUser returned: ');
     console.dir(data);
   });

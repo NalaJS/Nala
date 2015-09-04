@@ -20,10 +20,6 @@ let User = sequelize.define('users', {
     type: Sequelize.INTEGER,
     field: 'age'
   },
-  friend: {
-    type: Sequelize.STRING,
-    field: 'friend'
-  }
 }, {
   freezeTableName: true
 });
@@ -58,13 +54,12 @@ let UserQueries = {
     resolve: (root, {name})=>{
       //make get request to database
       //return userType
-      User
+      return User
         .findOne({
           where: { name : name }
         })
         .then(function(user){
-          console.log('user;', user);
-          //resolve(user);
+          return user;
         })
     }
   },
@@ -107,15 +102,18 @@ let RootMutation = new GraphQLObjectType({
             age: age,
             //friend: req.body.friend
           }
-        }).spread(function(user, created){
-          console.log("findOrCreate User returned: ",user.get({
-            plain:true
-          }));
-          data = user;
         })
-        console.log("findOrCreate:::");
-        console.log(data);
-        return data;
+        .then(function(user){
+          console.log(user);
+          return user;
+        })
+        // .spread(function(user, created){
+        //   console.log("findOrCreate User returned: ",user.get({
+        //     plain:true
+        //   }));
+        //   return user;
+        // })
+
     }
     },
     updateUser:{
@@ -126,10 +124,14 @@ let RootMutation = new GraphQLObjectType({
         age: {type: GraphQLInt}
       },
       resolve: (root,{name,age})=>{
-        return {
-          name:"Updated!",
-          age:3
-        }
+        User.update(
+          {age: age},
+          {where:
+          {name: name}
+          }
+          ).then(function() {
+            //console.log('data1:');
+          })
       }
     },
     deleteUser:{
@@ -139,11 +141,10 @@ let RootMutation = new GraphQLObjectType({
         name: {type: GraphQLString}
       },
       resolve: (root, {name})=>{
-        console.log('de');
-        return {
-          name: "Deleted!",
-          age: 4
-        }
+        console.log('destroying'+ name);
+        return User.destroy({
+            where: {name: name}
+          })
       }
     },
     addBlogpost:{
