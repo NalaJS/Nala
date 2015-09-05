@@ -6,11 +6,13 @@ import bodyParser from 'body-parser';
 let app = express();
 
 app.use(express.static('client'));
-app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 
 async function graphQLHandler(req, res){
+  console.log('req.body!!',req.body);
   const {query, variables = {}} = req.body;
+  console.log(query);
+  console.log(variables);
   const result = await graphql(
     Schema,
     query,

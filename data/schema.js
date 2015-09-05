@@ -61,7 +61,7 @@ let UserQueries = {
           where: { name : name }
         })
         .then(function(user){
-          console.log(user);
+          //console.log(user);
           return user;
         })
     }

@@ -1,17 +1,15 @@
 var React = require('react'),
     $ = require('jQuery');
 
-var AddFriend = React.createClass({
+var RemoveFriend = React.createClass({
   getInitialState: function(){
     return {
       user1:'',
       user2:'',
-      //displayFriends:'',
-      //displayFriends2:''
     };
   },
 
-  //Handles the adding of a friend. enter in name and who you want to add as friend.
+  //Handles the removing of a friend. enter in name and who you want to remove as friend.
    handleUser1: function(event) {
      this.setState({
        user1: event.target.value
@@ -23,7 +21,7 @@ var AddFriend = React.createClass({
      })
    },
 
-   //function to add data to addFriend
+   //function to remove data to addFriend
    removeFriend: function(event) {
       event.preventDefault();
       console.log('removing buddy');
@@ -51,4 +49,4 @@ var AddFriend = React.createClass({
     },
 });
 
-module.exports = AddFriend;
+module.exports = RemoveFriend;

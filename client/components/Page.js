@@ -68,11 +68,11 @@ getUser: function(event){
   event.preventDefault();
   var user = {'name' :this.state.searchName};
   var query = {
-      'query' : 'query queryUser{getUser(name:"'+user.name+'"){name, age}}'
+      //'query' : 'query queryUser{getUser(name:"'+user.name+'"){name, age}}',
+      'query' : 'query queryUser($name:String){getUser(name: $name){name, age}}',
+      'variables': {'name':String(user.name)}
   }
   $.post('/', query, function(response){
-    // console.log('getUser returned: ');
-    // console.log(response);
     console.dir(response.data.getUser);
   });
 },

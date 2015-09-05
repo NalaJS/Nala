@@ -6,8 +6,7 @@ var AddFriend = React.createClass({
     return {
       user1:'',
       user2:'',
-      displayFriends:'',
-      displayFriends2:''
+      displayFriends:''
     };
   },
 
