@@ -24,7 +24,9 @@ let User = sequelize.define('users', {
   freezeTableName: true
 });
 
-User.sync();
+User.belongsToMany(User, {as: 'friends', through: 'friendships'});
+sequelize.sync().then(function(){});
+//User.sync();
 
 let userType = new GraphQLObjectType({
     name: 'user',
@@ -59,6 +61,7 @@ let UserQueries = {
           where: { name : name }
         })
         .then(function(user){
+          console.log(user);
           return user;
         })
     }
@@ -107,13 +110,6 @@ let RootMutation = new GraphQLObjectType({
           console.log(user);
           return user;
         })
-        // .spread(function(user, created){
-        //   console.log("findOrCreate User returned: ",user.get({
-        //     plain:true
-        //   }));
-        //   return user;
-        // })
-
     }
     },
     updateUser:{
@@ -145,6 +141,78 @@ let RootMutation = new GraphQLObjectType({
         return User.destroy({
             where: {name: name}
           })
+      }
+    },
+    addFriend:{
+      type: GraphQLString,
+      description: 'adds friendship between 2 users',
+      args:{
+        user1: {type: GraphQLString},
+        user2: {type: GraphQLString}
+      },
+      resolve: (root, {user1, user2})=>{
+        console.log('resolving addFriend');
+        User.findOne({
+            where: {
+              name: user1
+            },
+            defaults: {
+              age: ''
+            }
+          }).then(function(userone, created){
+            User.findOne({
+              where: {
+                name: user2
+              },
+              defaults: {
+                age: ''
+              }
+            }).then(function(usertwo, created){
+              userone.addFriend(usertwo).then(function(){
+                usertwo.addFriend(userone).then(function(friends){
+                  userone.getFriends().then(function (friends){
+                    console.log("Added friendship!");
+                  })
+                });
+              });
+            })
+          });
+      }
+    },
+    removeFriend:{
+      type: GraphQLString,
+      description: 'remove friendship between 2 users',
+      args:{
+        user1: {type: GraphQLString},
+        user2: {type: GraphQLString}
+      },
+      resolve: (root, {user1, user2})=>{
+        console.log('resolving removeFriend');
+        User.findOne({
+            where: {
+              name: user1
+            },
+            defaults: {
+              age: ''
+            }
+          }).then(function(userone, created){
+            User.findOne({
+              where: {
+                name: user2
+              },
+              defaults: {
+                age: ''
+              }
+            }).then(function(usertwo, created){
+              userone.removeFriend(usertwo).then(function(){
+                usertwo.removeFriend(userone).then(function(friends){
+                  userone.getFriends().then(function (friends){
+                    console.log("Removed friendship!");
+                  })
+                });
+              });
+            })
+          });
       }
     },
     addBlogpost:{

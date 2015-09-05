@@ -2,6 +2,8 @@ var React = require('react');
 var $ = require('jQuery');
 // var {graphql} = require('graphql');
 // var Schema = require('../../schema');
+var AddFriend = require('./AddFriend');
+var RemoveFriend = require('./RemoveFriend');
 
 var Page = React.createClass({
 
@@ -66,12 +68,12 @@ getUser: function(event){
   event.preventDefault();
   var user = {'name' :this.state.searchName};
   var query = {
-      'query' : 'query getUser{getUser(name:"'+user.name+'"){name, age}}'
+      'query' : 'query queryUser{getUser(name:"'+user.name+'"){name, age}}'
   }
   $.post('/', query, function(response){
-    console.log('getUser returned: ');
-    console.log(response);
-    console.dir(response);
+    // console.log('getUser returned: ');
+    // console.log(response);
+    console.dir(response.data.getUser);
   });
 },
 
@@ -81,7 +83,7 @@ addUser: function(event){
   console.log('updated!');
   console.log('user:', user);
   var query = {
-    'query' : 'mutation updateUser{addUser(name:"'+user.name+'",age:'+user.age+'){name,age}}',//'mutation updateUser{addUser}',
+    'query' : 'mutation mutateUser{addUser(name:"'+user.name+'",age:'+user.age+'){name,age}}',//'mutation updateUser{addUser}',
     //'variables' : {'user': String(user.name), 'age':user.age}
   };
 
@@ -97,7 +99,7 @@ updateUser: function(event){
   console.log('update User');
   //console.log('user updateage:', user.updateAge);
   var query = {
-    'query' : 'mutation updateUser{updateUser(name:"'+user.name+'",age:'+user.age+'){name,age}}',//'mutation updateUser{updateUser}',
+    'query' : 'mutation mutateUser{updateUser(name:"'+user.name+'",age:'+user.age+'){name,age}}',//'mutation updateUser{updateUser}',
     //'variables' : {'user': String(user.name), 'age':user.age}
   };
 
@@ -112,7 +114,7 @@ deleteUser: function(event){
   event.preventDefault();
   var user = {'name' : this.state.deleteName};
   var query = {
-    'query' : 'mutation updateUser{deleteUser(name:"' + user.name + '"){name,age}}',
+    'query' : 'mutation mutateUser{deleteUser(name:"' + user.name + '"){name,age}}',
   };
   $.post('/', query, function(data){
     console.log('deleteUser returned: ');
@@ -157,7 +159,8 @@ render: function() {
           Name:{this.state.displayName} <br/>
           Age: {this.state.displayAge}
           </p>
-
+          <AddFriend />
+          <RemoveFriend />
 	      </div>
 	    )
   }
