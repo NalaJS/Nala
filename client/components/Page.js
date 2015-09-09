@@ -17,7 +17,7 @@ var Page = React.createClass({
     updateName:"",
     updateAge:"",
     deleteName:""
-    } ;
+    };
   },
 handleChangeSearchName: function(event) {
       //console.log('handle');

@@ -36,15 +36,6 @@ let userType = new GraphQLObjectType({
     }
 });
 
-let blogpostType = new GraphQLObjectType({
-  'name': 'blogpost',
-  fields: {
-    'id' : {type: GraphQLInt},
-    'title': {type: GraphQLString},
-    'author': {type: GraphQLString}
-  }
-});
-
 let UserQueries = {
   getUser:{
     type: userType,
@@ -54,30 +45,19 @@ let UserQueries = {
     },
     //resolve: User.getUserByName
     resolve: (root, {name})=>{
-      //make get request to database
-      //return userType
       return User
         .findOne({
           where: { name : name }
         })
-        .then(function(user){
-          //console.log(user);
-          return user;
-        })
     }
-  },
-  //getUsers:{...}
+  }
 };
 
 let RootQuery = new GraphQLObjectType({
   name: 'query',
   description: 'this is the root query',
   fields: {
-    getUser: UserQueries.getUser,
-    getBlogpost:{
-      type: blogpostType,
-      resolve: ()=>{console.log("get blogpost query");}
-    }
+    getUser: UserQueries.getUser
   }
 });
 
@@ -92,24 +72,19 @@ let RootMutation = new GraphQLObjectType({
         age: {type:GraphQLInt}
       },
       description: 'returns user object',
-      resolve: (root, {name, age})=>{
+      resolve: (root,{name, age})=>{
       //add to database
       //database returns userobject added
       var data;
-      User
+      return User
         .findOrCreate({
           where: {
             name : name
           },
           defaults:{
             age: age,
-            //friend: req.body.friend
           }
-        })
-        .then(function(user){
-          console.log(user);
-          return user;
-        })
+        }).spread(function(user){return user}); //why spread instead of then?
     }
     },
     updateUser:{
@@ -123,11 +98,9 @@ let RootMutation = new GraphQLObjectType({
         User.update(
           {age: age},
           {where:
-          {name: name}
+            {name: name}
           }
-          ).then(function() {
-            //console.log('data1:');
-          })
+        )
       }
     },
     deleteUser:{
@@ -155,23 +128,18 @@ let RootMutation = new GraphQLObjectType({
         User.findOne({
             where: {
               name: user1
-            },
-            defaults: {
-              age: ''
             }
           }).then(function(userone, created){
             User.findOne({
               where: {
                 name: user2
-              },
-              defaults: {
-                age: ''
               }
             }).then(function(usertwo, created){
               userone.addFriend(usertwo).then(function(){
                 usertwo.addFriend(userone).then(function(friends){
                   userone.getFriends().then(function (friends){
-                    console.log("Added friendship!");
+                    console.log("Added friendship: ", friends);
+                    //return friends;
                   })
                 });
               });
@@ -191,33 +159,23 @@ let RootMutation = new GraphQLObjectType({
         User.findOne({
             where: {
               name: user1
-            },
-            defaults: {
-              age: ''
             }
           }).then(function(userone, created){
             User.findOne({
               where: {
                 name: user2
-              },
-              defaults: {
-                age: ''
               }
             }).then(function(usertwo, created){
               userone.removeFriend(usertwo).then(function(){
                 usertwo.removeFriend(userone).then(function(friends){
                   userone.getFriends().then(function (friends){
-                    console.log("Removed friendship!");
+                    console.log("Removed friendship: ",friends);
                   })
                 });
               });
             })
           });
       }
-    },
-    addBlogpost:{
-      type: blogpostType,
-      resolve: ()=>{console.log("get blogpost query");}
     }
   }
 });
