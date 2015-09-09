@@ -1,4 +1,3 @@
-//import User from './models/UserSchema.js';
 import Sequelize from 'sequelize';
 
 import {
@@ -26,7 +25,6 @@ let User = sequelize.define('users', {
 
 User.belongsToMany(User, {as: 'friends', through: 'friendships'});
 sequelize.sync().then(function(){});
-//User.sync();
 
 let userType = new GraphQLObjectType({
     name: 'user',
@@ -135,14 +133,8 @@ let RootMutation = new GraphQLObjectType({
                 name: user2
               }
             }).then(function(usertwo, created){
-              userone.addFriend(usertwo).then(function(){
-                usertwo.addFriend(userone).then(function(friends){
-                  userone.getFriends().then(function (friends){
-                    console.log("Added friendship: ", friends);
-                    //return friends;
-                  })
-                });
-              });
+              userone.addFriend(usertwo);
+              usertwo.addFriend(userone);
             })
           });
       }
@@ -166,13 +158,8 @@ let RootMutation = new GraphQLObjectType({
                 name: user2
               }
             }).then(function(usertwo, created){
-              userone.removeFriend(usertwo).then(function(){
-                usertwo.removeFriend(userone).then(function(friends){
-                  userone.getFriends().then(function (friends){
-                    console.log("Removed friendship: ",friends);
-                  })
-                });
-              });
+              userone.removeFriend(usertwo);
+              usertwo.removeFriend(userone);
             })
           });
       }
