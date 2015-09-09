@@ -75,6 +75,7 @@ getUser: function(event){
   $.post('/', query, function(response){
     console.dir(response.data.getUser);
   });
+  this.setState({'searchName':''});
 },
 
 addUser: function(event){
@@ -83,14 +84,15 @@ addUser: function(event){
   console.log('updated!');
   console.log('user:', user);
   var query = {
-    'query' : 'mutation mutateUser{addUser(name:"'+user.name+'",age:'+user.age+'){name,age}}',//'mutation updateUser{addUser}',
-    //'variables' : {'user': String(user.name), 'age':user.age}
+    'query' : 'mutation mutateUser($name:String, $age:Int){addUser(name: $name,age: $age){name,age}}',//'mutation updateUser{addUser}',
+    'variables' : {'name':String(user.name), 'age':user.age}
   };
 
   $.post('/', query, function(response){
     console.log('addUser returned: ');
     console.dir(response);
   });
+  this.setState({'name':'', 'age':''});
 },
 
 updateUser: function(event){
@@ -99,8 +101,8 @@ updateUser: function(event){
   console.log('update User');
   //console.log('user updateage:', user.updateAge);
   var query = {
-    'query' : 'mutation mutateUser{updateUser(name:"'+user.name+'",age:'+user.age+'){name,age}}',//'mutation updateUser{updateUser}',
-    //'variables' : {'user': String(user.name), 'age':user.age}
+    'query' : 'mutation mutateUser($name:String, $age:Int){updateUser(name:$name,age:$age){name,age}}',//'mutation updateUser{updateUser}',
+    'variables' : {'name': String(user.name), 'age':user.age}
   };
 
   $.post('/', query, function(response){
@@ -108,6 +110,7 @@ updateUser: function(event){
     console.dir(response);
     //console.log("updateUser returned: " + response);
   });
+  this.setState({'updateName':'', 'updateAge':''});
 },
 
 deleteUser: function(event){
@@ -120,36 +123,37 @@ deleteUser: function(event){
     console.log('deleteUser returned: ');
     console.dir(data);
   });
+  this.setState({'deleteName':''});
 },
 
 render: function() {
 	return (
 	      <div>
-        Create User
+        <h3 style={h3style}>Create User</h3>
           <form onSubmit = {this.addUser}>
-              <input type = "text"  name = {this.state.name} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeName}/>
+              <input type = "text"  value = {this.state.name} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeName}/>
               <br/>
-              <input type = "text"  age = {this.state.age} defaultValue = "" placeholder="Age" onChange = {this.handleChangeAge}/>
+              <input type = "text"  value = {this.state.age} defaultValue = "" placeholder="Age" onChange = {this.handleChangeAge}/>
                <br/><br/>
               <button> Add </button>
           </form>
-          Retrieve User
+          <h3 style={h3style}>Retrieve User</h3>
           <form onSubmit = {this.getUser}>
-              <input type = "text"  searchName = {this.state.searchName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeSearchName}/>
+              <input type = "text"  value = {this.state.searchName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeSearchName}/>
               <br/><br/>
               <button> Get </button>
           </form>
-          Update User
+          <h3 style={h3style}>Update User</h3>
           <form onSubmit = {this.updateUser}>
-              <input type = "text"  searchName = {this.state.updateName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeUpdateName}/>
+              <input type = "text"  value = {this.state.updateName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeUpdateName}/>
               <br/>
-              <input type = "text"  age = {this.state.updateAge} defaultValue = "" placeholder="Age" onChange = {this.handleChangeUpdateAge}/>
+              <input type = "text"  value = {this.state.updateAge} defaultValue = "" placeholder="Age" onChange = {this.handleChangeUpdateAge}/>
               <br/><br/>
               <button> Update </button>
           </form>
-          Delete User
+          <h3 style={h3style} >Delete User</h3>
           <form onSubmit = {this.deleteUser}>
-              <input type = "text"  searchName = {this.state.deleteName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeDeleteName}/>
+              <input type = "text"  value = {this.state.deleteName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeDeleteName}/>
               <br/><br/>
               <button> Delete </button>
           </form>
@@ -159,11 +163,19 @@ render: function() {
           Name:{this.state.displayName} <br/>
           Age: {this.state.displayAge}
           </p>
-          <AddFriend />
-          <RemoveFriend />
+          <AddFriend/>
+          <RemoveFriend/>
 	      </div>
 	    )
   }
+
 });
+
+var h3style = {
+color: 'midnightblue',
+
+
+};
+
 
 module.exports = Page;
