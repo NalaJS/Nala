@@ -8,24 +8,24 @@ import {
 } from 'graphql';
 
 // var sequelize = new Sequelize('postgres://localhost/test');
-
-// get rid of this
-let User = sequelize.define('users', {
-  name: {
-    type: Sequelize.STRING,
-    field: 'name'
-  },
-  age: {
-    type: Sequelize.INTEGER,
-    field: 'age'
-  },
-});
-
-// get rid of this
-User.belongsToMany(User, {as: 'friends', through: 'friendships'});
-
-// get rid of this
-sequelize.sync();
+//
+// // get rid of this
+// let User = sequelize.define('users', {
+//   name: {
+//     type: Sequelize.STRING,
+//     field: 'name'
+//   },
+//   age: {
+//     type: Sequelize.INTEGER,
+//     field: 'age'
+//   },
+// });
+//
+// // get rid of this
+// User.belongsToMany(User, {as: 'friends', through: 'friendships'});
+//
+// // get rid of this
+// sequelize.sync();
 
 let userType = new GraphQLObjectType({
     name: 'user',
@@ -104,6 +104,8 @@ let Mutation = new GraphQLObjectType({
         name: {type: GraphQLString}
       },
       resolve: (root, {name})=>{
+        console.log('root in deleteUser: ',root);
+        console.log('User in deleteUser: ',User);
         return User.destroy({
             where: {name: name}
           })

@@ -1,13 +1,8 @@
 import express from 'express';
-import {graphql} from 'graphql';
-import Schema from './data/schema.js';
 import bodyParser from 'body-parser';
-import Sequelize from 'sequelize';
-
 
 let app = express();
 
-app.use(express.static('client'));
 app.use(bodyParser.urlencoded());
 
 async function graphQLHandler(req, res, schema){
@@ -22,14 +17,6 @@ async function graphQLHandler(req, res, schema){
   );
   res.send(result);
 }
-
-// app.post('/', graphQLHandler);
-
-// var Sandal = require('sandle');
-var cb = Sandal(Schema, 'postgres://localhost/test'); // => function(req, res) { }
-app.post('/',cb);
-
-
 
 function Sandal(schema,uri){//query, mutation, uri) {
   var sequelize = new Sequelize(uri);
@@ -58,7 +45,7 @@ function Sandal(schema,uri){//query, mutation, uri) {
     console.log('name arg in getUser: ',name);
     //return User
     console.log('User in getUser: ', User);
-    console.log('got here!');
+    console.log('got here');
     return User
       .findOne({
         where: { name : name }
@@ -70,11 +57,3 @@ function Sandal(schema,uri){//query, mutation, uri) {
     graphQLHandler(req, res, schema);
   }
 }
-
-app.listen(process.env.PORT || 3000, function(){
-  console.log("Server is listening on port 3000.");
-  //sequelize = new Sequelize('postgres://localhost/test');
-});
-
-module.exports = app;
-//module.exports.sequelize = sequelize;
