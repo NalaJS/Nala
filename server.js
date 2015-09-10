@@ -22,9 +22,9 @@ async function graphQLHandler(req, res){
 }
 
 app.post('/', graphQLHandler);
-// var sandle = require('sandle');
-// var cv = sandle(Schema, uri); // => function(req, res) { }
-// app.post('/',cv);
+// var Sandal = require('sandle');
+// var cb = Sandal(Schema, uri); // => function(req, res) { }
+// app.post('/',cb);
 
 app.listen(process.env.PORT || 3000, function(){
   console.log("Server is listening on port 3000.");

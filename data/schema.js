@@ -10,7 +10,6 @@ import {
 var sequelize = new Sequelize('postgres://localhost/test');
 
 let User = sequelize.define('users', {
-
   name: {
     type: Sequelize.STRING,
     field: 'name'
@@ -19,8 +18,6 @@ let User = sequelize.define('users', {
     type: Sequelize.INTEGER,
     field: 'age'
   },
-}, {
-  freezeTableName: true
 });
 
 User.belongsToMany(User, {as: 'friends', through: 'friendships'});
@@ -34,32 +31,27 @@ let userType = new GraphQLObjectType({
     }
 });
 
-let UserQueries = {
-  getUser:{
-    type: userType,
-    description: 'get user object with provided name',
-    args: {
-      name: {type: GraphQLString}
-    },
-    //resolve: User.getUserByName
-    resolve: (root, {name})=>{
-      return User
-        .findOne({
-          where: { name : name }
-        })
-    }
-  }
-};
-
-let RootQuery = new GraphQLObjectType({
+let Query = new GraphQLObjectType({
   name: 'query',
   description: 'this is the root query',
   fields: {
-    getUser: UserQueries.getUser
+    getUser: {
+      type: userType,
+      description: 'get user object with provided name',
+      args: {
+        name: {type: GraphQLString}
+      },
+      resolve: (root, {name})=>{
+        return User
+          .findOne({
+            where: { name : name }
+          })
+      }
+    }
   }
 });
 
-let RootMutation = new GraphQLObjectType({
+let Mutation = new GraphQLObjectType({
   name: 'mutation',
   description: 'this is the root mutation',
   fields: {
@@ -108,7 +100,6 @@ let RootMutation = new GraphQLObjectType({
         name: {type: GraphQLString}
       },
       resolve: (root, {name})=>{
-        console.log('destroying'+ name);
         return User.destroy({
             where: {name: name}
           })
@@ -122,7 +113,6 @@ let RootMutation = new GraphQLObjectType({
         user2: {type: GraphQLString}
       },
       resolve: (root, {user1, user2})=>{
-        console.log('resolving addFriend');
         User.findOne({
             where: {
               name: user1
@@ -147,7 +137,6 @@ let RootMutation = new GraphQLObjectType({
         user2: {type: GraphQLString}
       },
       resolve: (root, {user1, user2})=>{
-        console.log('resolving removeFriend');
         User.findOne({
             where: {
               name: user1
@@ -168,8 +157,8 @@ let RootMutation = new GraphQLObjectType({
 });
 
 let schema = new GraphQLSchema({
-  query : RootQuery,
-  mutation : RootMutation
+  query : Query,
+  mutation : Mutation
 });
 
 module.exports = schema;

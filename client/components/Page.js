@@ -173,8 +173,6 @@ render: function() {
 
 var h3style = {
 color: 'midnightblue',
-
-
 };
 
 
