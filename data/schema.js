@@ -7,26 +7,6 @@ import {
   GraphQLString,
 } from 'graphql';
 
-// var sequelize = new Sequelize('postgres://localhost/test');
-//
-// // get rid of this
-// let User = sequelize.define('users', {
-//   name: {
-//     type: Sequelize.STRING,
-//     field: 'name'
-//   },
-//   age: {
-//     type: Sequelize.INTEGER,
-//     field: 'age'
-//   },
-// });
-//
-// // get rid of this
-// User.belongsToMany(User, {as: 'friends', through: 'friendships'});
-//
-// // get rid of this
-// sequelize.sync();
-
 let userType = new GraphQLObjectType({
     name: 'user',
     fields : {
@@ -44,14 +24,7 @@ let Query = new GraphQLObjectType({
       description: 'get user object with provided name',
       args: {
         name: {type: GraphQLString}
-      },
-      // get rid of this
-      // resolve: (root, {name})=>{
-      //   return User
-      //     .findOne({
-      //       where: { name : name }
-      //     })
-      // }
+      }
     }
   }
 });

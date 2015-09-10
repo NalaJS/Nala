@@ -11,9 +11,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
 async function graphQLHandler(req, res, schema){
-  console.log('in graphqlhandler');
-  console.log('req ',req);
-  console.log('req.body', req.body);
   const {query, variables = {}} = req.body;
   console.log(query);
   console.log(variables);
@@ -27,9 +24,11 @@ async function graphQLHandler(req, res, schema){
 }
 
 function Sandal(schema,uri){//query, mutation, uri) {
-  var sequelize = new Sequelize(uri);
-  console.log('Sandal init');
 
+  // eventually parse uri for different dbs
+  var sequelize = new Sequelize(uri);
+
+  // todo: generate sequelize schema based on provided schema
   let User = sequelize.define('users', {
     name: {
       type: Sequelize.STRING,
@@ -41,28 +40,25 @@ function Sandal(schema,uri){//query, mutation, uri) {
     },
   });
 
-  // get rid of this
-  User.belongsToMany(User, {as: 'friends', through: 'friendships'});
+  // let userType = new GraphQLObjectType({
+  //     name: 'user',
+  //     fields : {
+  //       'name' : {type: GraphQLString},
+  //       'age' : {type: GraphQLInt}
+  //     }
+  // });
 
-  // get rid of this
+  // todo: make relations work
+  User.belongsToMany(User, {as: 'friends', through: 'friendships'});
   sequelize.sync();
 
-  //console.log(schema);//._schemaConfig.query._fields);
-  //console.log(schema._schemaConfig.query._fields);
   schema._schemaConfig.query._fields.getUser.resolve = (root, {name})=>{
-    console.log('resolving in getUser');
-    console.log('root in getUser: ',root);
-    console.log('name arg in getUser: ',name);
-    //return User
-    console.log('User in getUser: ', User);
-    console.log('got here');
     return User
       .findOne({
         where: { name : name }
       })
-    console.log('getUser returned: ',user);
   }
-  console.log(schema._schemaConfig.query._fields);
+  //console.log(schema._schemaConfig.query._fields);
   return function(req, res) {
     console.log('pre graphqlhandler');
     console.log('req body in Callback ',req.body);
