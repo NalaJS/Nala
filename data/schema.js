@@ -7,8 +7,9 @@ import {
   GraphQLString,
 } from 'graphql';
 
-var sequelize = new Sequelize('postgres://localhost/test');
+// var sequelize = new Sequelize('postgres://localhost/test');
 
+// get rid of this
 let User = sequelize.define('users', {
   name: {
     type: Sequelize.STRING,
@@ -20,8 +21,11 @@ let User = sequelize.define('users', {
   },
 });
 
+// get rid of this
 User.belongsToMany(User, {as: 'friends', through: 'friendships'});
-sequelize.sync().then(function(){});
+
+// get rid of this
+sequelize.sync();
 
 let userType = new GraphQLObjectType({
     name: 'user',
@@ -41,12 +45,13 @@ let Query = new GraphQLObjectType({
       args: {
         name: {type: GraphQLString}
       },
-      resolve: (root, {name})=>{
-        return User
-          .findOne({
-            where: { name : name }
-          })
-      }
+      // get rid of this
+      // resolve: (root, {name})=>{
+      //   return User
+      //     .findOne({
+      //       where: { name : name }
+      //     })
+      // }
     }
   }
 });
@@ -65,7 +70,6 @@ let Mutation = new GraphQLObjectType({
       resolve: (root,{name, age})=>{
       //add to database
       //database returns userobject added
-      var data;
       return User
         .findOrCreate({
           where: {
