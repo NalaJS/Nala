@@ -23,70 +23,41 @@ async function graphQLHandler(req, res, schema){
   res.send(result);
 }
 
-function Sandal(schema,uri){//query, mutation, uri) {
-
+function Sandal(schema,uri){
   // eventually parse uri for different dbs
   var sequelize = new Sequelize(uri);
 
-  // todo: generate sequelize schema based on provided schema
-/*  let User = sequelize.define('users', {
-    name: {
-      type: Sequelize.STRING,
-      field: 'name'
-    },
-    age: {
-      type: Sequelize.INTEGER,
-      field: 'age'
-    },
-  });
-*/
-
   // todo: make relations work
-
-
+  //manually define resolve for getUser query.
+  //TODO: fix so that we don't have to hard code user query + resolve
   schema._schemaConfig.query._fields.getUser.resolve = (root, {name})=>{
     return User
       .findOne({
         where: { name : name }
       })
   }
-  // for (var key in schema._typeMap) {
-  //   console.log('Key is: ', key);
-  // }
-  //TODO: find better name
+
+  //extract user defined schemas that we want to convert into sequelize schemas
   var defaultNames = ['String', 'query', 'Int', 'mutation', 'Boolean'];
   var GraphQLModelNames = Object.keys(schema._typeMap).filter(function(elem) {
     return defaultNames.indexOf(elem) < 0 && (elem[0] !== '_' || elem[1] !== '_');
   });
 
-//eval(`var ${sequelizeSchemas[0][0]} = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1])`);
+//convert extracted schemas into sequelize schemas
 var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
-//console.dir("sequelizeSchemas: " + Object.keys(sequelizeSchemas[0][1]));
-//var User = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1]); //expect: var User = obj; //var ourName = obj
+
+//TODO: currently does for hard coded model. fix to work with array of all models
+//get uppercase of modelname for a single model (user->User) to be used in 'var User =...;'
 var modelName = sequelizeSchemas[0][0].charAt(0).toUpperCase()+sequelizeSchemas[0][0].slice(1);
+
+//TODO:do this for all user defined models
+//create global variable with modelName defined above. Define corresponding sequelize schema
 global[modelName] = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1]);
-//console.log(User);
-//console.log(User);
-//string.charAt(0).toUpperCase() + string.slice(1);
-console.log('sequelizeSchemas[0][0]: ',sequelizeSchemas[0][0]);
+
+
 global[modelName].belongsToMany(global[modelName], {as: 'friends', through: 'friendships'});
 sequelize.sync();
-//console.log("sqlize double os", User);
-//console.log("model fields name type...  ", schema._typeMap[GraphQLModels[0]]._fields.age.type);
-  // console.log(schema._typeMap[GraphQLModels[0]]);
-  // { name: 'user',
-  //   description: 'this is the user type',
-  //   isTypeOf: undefined,
-  //   _typeConfig:
-  //    { name: 'user',
-  //      description: 'this is the user type',
-  //      fields: { name: [Object], age: [Object] } },
-  //   _interfaces: [],
-  //   _fields:
-  //    { name: { type: [Object], name: 'name', args: [] },
-  //      age: { type: [Object], name: 'age', args: [] } } }
 
-  // console.dir(schema._typeMap);//._schemaConfig);//.mutation._fields);
   return function(req, res) {
     console.log('pre graphqlhandler');
     console.log('req body in Callback ',req.body);
@@ -110,41 +81,9 @@ function convertSchema(modelNames, typeMap){
         field: fields[j]
       };
     }
-    // console.log("sequeilize int", Sequelize.INTEGER);
-    // console.log("sequelize schema", sequelizeSchema.age.type);
-    // sequelizeArr.push(sequelize.define(modelNames[i], sequelizeSchema));
     sequelizeArr.push([modelNames[i], sequelizeSchema]);
   }
     return sequelizeArr;
-  //
-  //to be created:
-  // let User = sequelize.define('users', {
-  //   name: {
-  //     type: Sequelize.STRING,
-  //     field: 'name'
-  //   },
-  //   age: {
-  //     type: Sequelize.INTEGER,
-  //     field: 'age'
-  //   },
-  // });
-
-  //we take in this...
-  // { name: 'user',
-  //   description: 'this is the user type',
-  //   isTypeOf: undefined,
-  //   _typeConfig:
-  //    { name: 'user',
-  //      description: 'this is the user type',
-  //      fields: { name: [Object], age: [Object] } },
-  //   _interfaces: [],
-  //   _fields:
-  //    { name: { type: [Object], name: 'name', args: [] },
-  //      age: { type: [Object], name: 'age', args: [] } } }
-
-
 }
-// for(let i = 0; i < GraphQLModels.length; i++){
-//
-// }
+
 module.exports = Sandal;
