@@ -29,7 +29,7 @@ function Sandal(schema,uri){//query, mutation, uri) {
   var sequelize = new Sequelize(uri);
 
   // todo: generate sequelize schema based on provided schema
-  let User = sequelize.define('users', {
+/*  let User = sequelize.define('users', {
     name: {
       type: Sequelize.STRING,
       field: 'name'
@@ -39,10 +39,10 @@ function Sandal(schema,uri){//query, mutation, uri) {
       field: 'age'
     },
   });
+*/
 
   // todo: make relations work
-  User.belongsToMany(User, {as: 'friends', through: 'friendships'});
-  sequelize.sync();
+
 
   schema._schemaConfig.query._fields.getUser.resolve = (root, {name})=>{
     return User
@@ -55,11 +55,17 @@ function Sandal(schema,uri){//query, mutation, uri) {
   // }
   //TODO: find better name
   var defaultNames = ['String', 'query', 'Int', 'mutation', 'Boolean'];
-  var GraphQLModels = Object.keys(schema._typeMap).filter(function(elem) {
+  var GraphQLModelNames = Object.keys(schema._typeMap).filter(function(elem) {
     return defaultNames.indexOf(elem) < 0 && (elem[0] !== '_' || elem[1] !== '_');
   });
 
-console.log("model fields name type...  ", schema._typeMap[GraphQLModels[0]]._fields.age.type);
+var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
+//console.dir("sequelizeSchemas: " + Object.keys(sequelizeSchemas[0][1]));
+var User = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1]); //expect: var User = obj; //var ourName = obj
+User.belongsToMany(User, {as: 'friends', through: 'friendships'});
+sequelize.sync();
+//console.log("sqlize double os", User);
+//console.log("model fields name type...  ", schema._typeMap[GraphQLModels[0]]._fields.age.type);
   // console.log(schema._typeMap[GraphQLModels[0]]);
   // { name: 'user',
   //   description: 'this is the user type',
@@ -93,11 +99,14 @@ function convertSchema(modelNames, typeMap){
         sequelizeFieldTypes = {String: Sequelize.STRING, Int: Sequelize.INTEGER};
     for(var j = 0; j < fields.length; j++) {
       sequelizeSchema[fields[j]] = {
-        type: sequelizeFieldTypes[model._fields.fields[j].type.name],
+        type: sequelizeFieldTypes[model._fields[fields[j]].type.name],
         field: fields[j]
       };
     }
-    sequelizeArr.push(sequelize.define(modelNames[i], sequelizeSchema));
+    // console.log("sequeilize int", Sequelize.INTEGER);
+    // console.log("sequelize schema", sequelizeSchema.age.type);
+    // sequelizeArr.push(sequelize.define(modelNames[i], sequelizeSchema));
+    sequelizeArr.push([modelNames[i], sequelizeSchema]);
   }
     return sequelizeArr;
   //
