@@ -59,10 +59,17 @@ function Sandal(schema,uri){//query, mutation, uri) {
     return defaultNames.indexOf(elem) < 0 && (elem[0] !== '_' || elem[1] !== '_');
   });
 
+//eval(`var ${sequelizeSchemas[0][0]} = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1])`);
 var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
 //console.dir("sequelizeSchemas: " + Object.keys(sequelizeSchemas[0][1]));
-var User = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1]); //expect: var User = obj; //var ourName = obj
-User.belongsToMany(User, {as: 'friends', through: 'friendships'});
+//var User = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1]); //expect: var User = obj; //var ourName = obj
+var modelName = sequelizeSchemas[0][0].charAt(0).toUpperCase()+sequelizeSchemas[0][0].slice(1);
+global[modelName] = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1]);
+//console.log(User);
+//console.log(User);
+//string.charAt(0).toUpperCase() + string.slice(1);
+console.log('sequelizeSchemas[0][0]: ',sequelizeSchemas[0][0]);
+global[modelName].belongsToMany(global[modelName], {as: 'friends', through: 'friendships'});
 sequelize.sync();
 //console.log("sqlize double os", User);
 //console.log("model fields name type...  ", schema._typeMap[GraphQLModels[0]]._fields.age.type);
