@@ -4,6 +4,7 @@ import Sequelize from 'sequelize';
 import {graphql} from 'graphql';
 
 let app = express();
+var tables = {}; //holds our sequelize tables
 
 console.log('Sandal is running');
 
@@ -27,11 +28,11 @@ function Sandal(schema,uri){
   // eventually parse uri for different dbs
   var sequelize = new Sequelize(uri);
 
-  // todo: make relations work
+  //TODO: make relations work
   //manually define resolve for getUser query.
   //TODO: fix so that we don't have to hard code user query + resolve
   schema._schemaConfig.query._fields.getUser.resolve = (root, {name})=>{
-    return User
+    return tables[modelName]
       .findOne({
         where: { name : name }
       })
@@ -52,10 +53,8 @@ var modelName = sequelizeSchemas[0][0].charAt(0).toUpperCase()+sequelizeSchemas[
 
 //TODO:do this for all user defined models
 //create global variable with modelName defined above. Define corresponding sequelize schema
-global[modelName] = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1]);
-
-
-global[modelName].belongsToMany(global[modelName], {as: 'friends', through: 'friendships'});
+tables[modelName] = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1]);
+tables[modelName].belongsToMany(tables[modelName], {as: 'friends', through: 'friendships'});
 sequelize.sync();
 
   return function(req, res) {
