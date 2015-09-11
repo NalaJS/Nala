@@ -8,11 +8,21 @@ import {
 } from 'graphql';
 
 let userType = new GraphQLObjectType({
-    name: 'user',
+    name: 'user', //TODO: Force user to give same name as table name
+    description: 'this is the user type',
     fields : {
       'name' : {type: GraphQLString},
       'age' : {type: GraphQLInt}
     }
+});
+
+let blogpostType = new GraphQLObjectType({
+  name: 'blogpost',
+  description: 'this is the blogpost object',
+  fields: {
+    'title': {type: GraphQLString},
+    'content': {type: GraphQLString}
+  }
 });
 
 let Query = new GraphQLObjectType({

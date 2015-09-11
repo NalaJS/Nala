@@ -40,14 +40,6 @@ function Sandal(schema,uri){//query, mutation, uri) {
     },
   });
 
-  // let userType = new GraphQLObjectType({
-  //     name: 'user',
-  //     fields : {
-  //       'name' : {type: GraphQLString},
-  //       'age' : {type: GraphQLInt}
-  //     }
-  // });
-
   // todo: make relations work
   User.belongsToMany(User, {as: 'friends', through: 'friendships'});
   sequelize.sync();
@@ -58,7 +50,28 @@ function Sandal(schema,uri){//query, mutation, uri) {
         where: { name : name }
       })
   }
-  //console.log(schema._schemaConfig.query._fields);
+  // for (var key in schema._typeMap) {
+  //   console.log('Key is: ', key);
+  // }
+  //TODO: find better name
+  var GraphQLModels = Object.keys(schema._typeMap).filter(function(elem) {
+    return elem !== 'String' && elem !== 'query' && elem !== 'Int' && elem !== 'mutation' && elem !== 'Boolean' && (elem[0] !== '_' || elem[1] !== '_');
+  });
+
+  console.log(schema._typeMap[GraphQLModels[0]]);
+  // { name: 'user',
+  //   description: 'this is the user type',
+  //   isTypeOf: undefined,
+  //   _typeConfig:
+  //    { name: 'user',
+  //      description: 'this is the user type',
+  //      fields: { name: [Object], age: [Object] } },
+  //   _interfaces: [],
+  //   _fields:
+  //    { name: { type: [Object], name: 'name', args: [] },
+  //      age: { type: [Object], name: 'age', args: [] } } }
+
+  // console.dir(schema._typeMap);//._schemaConfig);//.mutation._fields);
   return function(req, res) {
     console.log('pre graphqlhandler');
     console.log('req body in Callback ',req.body);
@@ -66,4 +79,7 @@ function Sandal(schema,uri){//query, mutation, uri) {
   }
 }
 
+// for(let i = 0; i < GraphQLModels.length; i++){
+//
+// }
 module.exports = Sandal;
