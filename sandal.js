@@ -32,7 +32,7 @@ function Sandal(schema,uri){
   //manually define resolve for getUser query.
   //TODO: fix so that we don't have to hard code user query + resolve
   schema._schemaConfig.query._fields.getUser.resolve = (root, {name})=>{
-    return tables[modelName]
+    return tables['User']
       .findOne({
         where: { name : name }
       })
@@ -44,29 +44,36 @@ function Sandal(schema,uri){
     return defaultNames.indexOf(elem) < 0 && (elem[0] !== '_' || elem[1] !== '_');
   });
 
-//convert extracted schemas into sequelize schemas
-var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
+  //convert extracted schemas into sequelize schemas
+  var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
 
-//TODO: currently does for hard coded model. fix to work with array of all models
-//get uppercase of modelname for a single model (user->User) to be used in 'var User =...;'
-var modelName = sequelizeSchemas[0][0].charAt(0).toUpperCase()+sequelizeSchemas[0][0].slice(1);
+  //initialize all user defined GraphQL models in sequelize.
+  //models are stored in tables object. eg. tables['User'] returns 'user' table
+  initSequelizeModels(sequelizeSchemas, sequelize);
 
-//TODO:do this for all user defined models
-//create global variable with modelName defined above. Define corresponding sequelize schema
-tables[modelName] = sequelize.define(sequelizeSchemas[0][0], sequelizeSchemas[0][1]);
-tables[modelName].belongsToMany(tables[modelName], {as: 'friends', through: 'friendships'});
-sequelize.sync();
+  //TODO: relations are currently hardcoded. fix this
+  tables['User'].belongsToMany(tables['User'], {as: 'friends', through: 'friendships'});
+  sequelize.sync();
 
   return function(req, res) {
-    console.log('pre graphqlhandler');
-    console.log('req body in Callback ',req.body);
     graphQLHandler(req, res, schema);
   }
 }
 
-//this function takes in the user created schema in GraphQLSchema object
-//and converts it into Sequelize model definitions and subsequently runs them.
+var initSequelizeModels = (sequelizeSchemas, sequelize) => {
+  // take each schema, get its toUppercase name
+  // add and sequelize define it to tables[modelName],
+  // simultaneously create a list of modelNames
+  for (var i = 0; i < sequelizeSchemas.length; i++){
+    var modelName = sequelizeSchemas[i][0].charAt(0).toUpperCase()+sequelizeSchemas[i][0].slice(1);
+    tables[modelName] = sequelize.define(sequelizeSchemas[i][0], sequelizeSchemas[i][1]);
+  }
+  //should we automatically create queries in schema.js?
+  //eg getter, update, delete
+}
 
+//convertSchema takes in the user created schema in GraphQLSchema object
+//and converts it into Sequelize model definitions
 function convertSchema(modelNames, typeMap){
   var sequelizeArr = [];
   for(var i = 0; i < modelNames.length; i++) {
