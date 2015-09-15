@@ -45,22 +45,15 @@ let userType = new GraphQLObjectType({
       'friends' : {
         type: new GraphQLList(userType),
         description: 'Returns friends of the user. Returns empty array if user has no friends',
-        args: {
-          name: {type: GraphQLString}
-        },
-        resolve: (root,{name})=>{
-          console.log('in userType: friends');
-          console.log('user name:',name);
+        resolve: (root)=>{
           return User.
-            findOne({where: {name : name}})
+            findOne({where: {name : root.name}})
               .then(function(user){
-                //find in friendsTable
                 return user.getFriends();
               })
         }
-
-      }
-    })
+      } //end of 'friends'
+    }) //end of fields
 });
 
 let Query = new GraphQLObjectType({
