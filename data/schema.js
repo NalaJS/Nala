@@ -5,6 +5,7 @@ import {
   GraphQLSchema,
   GraphQLInt,
   GraphQLString,
+  GraphQLList,
 } from 'graphql';
 
 var sequelize = new Sequelize('postgres://localhost/test');
@@ -23,9 +24,17 @@ let User = sequelize.define('users', {
 User.belongsToMany(User, {as: 'friends', through: 'friendships'});
 sequelize.sync().then(function(){});
 
+let blogpostType = new GraphQLObjectType({
+    name: 'blogpost',
+    fields : {
+      'title' : {type: GraphQLString},
+      'author' : {type: GraphQLInt},
+    }
+});
+
 let userType = new GraphQLObjectType({
     name: 'user',
-    fields : {
+    fields : ()=> ({
       'name' : {type: GraphQLString},
       'age' : {type: GraphQLInt},
       //friends is a GraphQLList that when parsed by sequelizeParser, we create the
@@ -36,17 +45,22 @@ let userType = new GraphQLObjectType({
       'friends' : {
         type: new GraphQLList(userType),
         description: 'Returns friends of the user. Returns empty array if user has no friends',
-        args: {name: GraphQLString},
-        resolve: ()=>{
+        args: {
+          name: {type: GraphQLString}
+        },
+        resolve: (root,{name})=>{
+          console.log('in userType: friends');
+          console.log('user name:',name);
           return User.
-            findOne({where: {name:name}})
+            findOne({where: {name : name}})
               .then(function(user){
                 //find in friendsTable
+                return user.getFriends();
               })
         }
 
       }
-    }
+    })
 });
 
 let Query = new GraphQLObjectType({
@@ -59,12 +73,12 @@ let Query = new GraphQLObjectType({
       args: {
         name: {type: GraphQLString},
       },
-      // resolve: (root, {name})=>{
-      //   return User
-      //     .findOne({
-      //       where: { name : name }
-      //     })
-      // }
+      resolve: (root, {name})=>{
+        return User
+          .findOne({
+            where: { name : name }
+          })
+      }
     }
   }
 });

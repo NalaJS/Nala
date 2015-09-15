@@ -4,6 +4,7 @@ var $ = require('jQuery');
 // var Schema = require('../../schema');
 var AddFriend = require('./AddFriend');
 var RemoveFriend = require('./RemoveFriend');
+var GetFriends = require('./GetFriends');
 
 var Page = React.createClass({
 
@@ -69,7 +70,7 @@ getUser: function(event){
   var user = {'name' :this.state.searchName};
   var query = {
       //'query' : 'query queryUser{getUser(name:"'+user.name+'"){name, age}}',
-      'query' : 'query queryUser($name:String){getUser(name: $name){name, age}}',
+      'query' : 'query queryUser($name:String){getUser(name: $name){name, age, friends(name:$name){name, age}}}',
       'variables': {'name':String(user.name)}
   }
   $.post('/', query, function(response){
@@ -165,6 +166,7 @@ render: function() {
           </p>
           <AddFriend/>
           <RemoveFriend/>
+          <GetFriends/>
 	      </div>
 	    )
   }

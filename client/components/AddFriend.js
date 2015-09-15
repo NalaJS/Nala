@@ -32,7 +32,7 @@ var AddFriend = React.createClass({
         'query' : 'mutation mutateUser($user1:String, $user2:String){addFriend(user1:$user1,user2:$user2)}',
         'variables': {'user1':String(data.user1), 'user2':String(data.user2)}
       };
-      
+
       $.post('/', query, function(data){
         console.log("addFriend returned: ", data);
       })
