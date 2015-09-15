@@ -27,7 +27,25 @@ let userType = new GraphQLObjectType({
     name: 'user',
     fields : {
       'name' : {type: GraphQLString},
-      'age' : {type: GraphQLInt}
+      'age' : {type: GraphQLInt},
+      //friends is a GraphQLList that when parsed by sequelizeParser, we create the
+      //User.belongsToMany(User /*based on GraphQLList(userType)*/, {as: 'friends', through: 'friendsTable'});
+      //we see that 'friends' belongs to a userType, so we query User.findOne(...)
+      //possibly make the table called 'friends'+'Table' automatically.
+      //query should always auto-access the friendsTable and return all the friends associated with the user
+      'friends' : {
+        type: new GraphQLList(userType),
+        description: 'Returns friends of the user. Returns empty array if user has no friends',
+        args: {name: GraphQLString},
+        resolve: ()=>{
+          return User.
+            findOne({where: {name:name}})
+              .then(function(user){
+                //find in friendsTable
+              })
+        }
+
+      }
     }
 });
 
@@ -39,14 +57,14 @@ let Query = new GraphQLObjectType({
       type: userType,
       description: 'get user object with provided name',
       args: {
-        name: {type: GraphQLString}
+        name: {type: GraphQLString},
       },
-      resolve: (root, {name})=>{
-        return User
-          .findOne({
-            where: { name : name }
-          })
-      }
+      // resolve: (root, {name})=>{
+      //   return User
+      //     .findOne({
+      //       where: { name : name }
+      //     })
+      // }
     }
   }
 });
