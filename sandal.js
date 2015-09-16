@@ -40,6 +40,9 @@ function Sandal(schema,uri){
         where: { name : name }
       })
   }
+
+  //TODO: right now, hardcoded to ..._fields.friends. instead, we should automatically/
+  //set the resolve upon initSequelizeRelations for userType etc.
   schema._typeMap.user._fields.friends.resolve = (root, {name})=>{
             console.log('resolving friends');
             console.log(root.name)
