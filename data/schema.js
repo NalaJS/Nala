@@ -44,12 +44,13 @@ let Query = new GraphQLObjectType({
   name: 'query',
   description: 'this is the root query',
   fields: {
+    presetFunctions:{type: GraphQLInt},
     getUser: {
       type: userType,
-      description: 'get user object with provided name',
-      args: {
-        name: {type: GraphQLString}
-      }
+      // description: 'get user object with provided name',
+      // args: {
+      //   name: {type: GraphQLString}
+      // }
     }
   }
 });
@@ -161,8 +162,8 @@ let Mutation = new GraphQLObjectType({
 });
 
 let schema = new GraphQLSchema({
-  query : Query,
-  mutation : Mutation
+   query : Query,
+   mutation : Mutation
 });
 
 module.exports = schema;

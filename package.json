@@ -23,6 +23,7 @@
     "react": "^0.13.3",
     "reactify": "^1.1.1",
     "sequelize": "^3.6.0",
+    "util": "^0.10.3",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.3.1"
   }

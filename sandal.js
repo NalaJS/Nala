@@ -1,7 +1,8 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import Sequelize from 'sequelize';
-import {graphql} from 'graphql';
+import {GraphQLObjectType, GraphQLString, graphql} from 'graphql';
+import util from 'util';
 
 let app = express();
 var tables = {}; //holds our sequelize tables
@@ -39,12 +40,23 @@ function Sandal(schema,uri){
   //TODO: make relations work
   //manually define resolve for getUser query.
   //TODO: fix so that we don't have to hard code user query + resolve
-  // QUERY_FIELDS.getUser.resolve = (root, {name})=>{
-  //   return tables['User']
-  //     .findOne({
-  //       where: { name : name }
-  //     })
-  // }
+  QUERY_FIELDS.getUser.resolve = (root, {name})=>{
+    return tables['User']
+      .findOne({
+        where: { name : name }
+      })
+  };
+  QUERY_FIELDS.getUser.description= 'get user object with provided name';
+
+  QUERY_FIELDS.getUser.args = [{
+    name: 'name',
+    type: GraphQLString,
+    description: null,
+    defaultValue: null
+  }];
+
+  //console.log(QUERY_FIELDS.getUser.args[0].name.type);
+  //console.log('updated');
   //QUERY_FIELDS[getX] = {
 
   //}
@@ -67,6 +79,7 @@ function Sandal(schema,uri){
   var GraphQLModelNames = Object.keys(schema._typeMap).filter(function(elem) {
     return defaultNames.indexOf(elem) < 0 && (elem[0] !== '_' || elem[1] !== '_');
   });
+  //GraphQLModelNames : ['String', 'user', 'Int' ...]
 
   //convert extracted schemas into sequelize schemas, returns pairs of names and sequelize schema objects
   var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
@@ -77,14 +90,13 @@ function Sandal(schema,uri){
   //corresponding sequelize schema objects
   //models are stored in tables object. eg. tables['User'] returns 'user' table
   initSequelizeModels(sequelizeSchemas, sequelize);
-  createGetters(GraphQLModelNames, schema._typeMap, QUERY_FIELDS);
+  //createGetters(GraphQLModelNames, schema._typeMap, QUERY_FIELDS);
   initSequelizeRelations(relationsArray);
-  //TODO: relations are currently hardcoded. fix this
-  //tables['User'].belongsToMany(tables['User'], {as: 'friends', through: 'friendships'});
+
   sequelize.sync();
 
   console.log('query fields');
-  console.log(QUERY_FIELDS.getUser.args);
+  console.log(util.inspect(QUERY_FIELDS.getUser.args, {showHidden: false, depth :null} ));
   console.log('query fields end');
 
 
@@ -142,15 +154,41 @@ function convertSchema(modelNames, typeMap){
     return sequelizeArr;
 }
 
+//modelNames: array of user created GraphQL model names e.g.['user', 'blogpost']
+// function createGetters(modelNames, typeMap, queryFields){
+//   for(var i = 0; i < modelNames.length; i++){
+//     //'user' -> 'User'
+//     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
+//     var getterName = 'get'+capitalizedName;
+//     queryFields[getterName] = {
+//       type: typeMap[modelNames[i]],
+//       description: `gets ${modelNames[i]} object`,
+//       args: {
+//         name: {type: typeMap.String},
+//       },
+//       name: getterName,
+//       resolve: (root, {name})=>{
+//         console.log('reached created getter!');
+//         return tables[capitalizedName]
+//           .findOne({
+//             where: { name : name }
+//           })
+//       }
+//     };
+//   }
+// }
+
 function createGetters(modelNames, typeMap, queryFields){
+  //console.log('typemap string: ', typeMap.String);
   for(var i = 0; i < modelNames.length; i++){
+    //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
     var getterName = 'get'+capitalizedName;
     queryFields[getterName] = {
       type: typeMap[modelNames[i]],
       description: `gets ${modelNames[i]} object`,
       args: {
-        name: {type: typeMap.String}
+        name: {type: typeMap.String},
       },
       name: getterName,
       resolve: (root, {name})=>{
