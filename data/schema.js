@@ -5,15 +5,30 @@ import {
   GraphQLSchema,
   GraphQLInt,
   GraphQLString,
+  GraphQLList
 } from 'graphql';
 
 let userType = new GraphQLObjectType({
     name: 'user', //TODO: Force user to give same name as table name
     description: 'this is the user type',
-    fields : {
+    fields : ()=>({
       'name' : {type: GraphQLString},
-      'age' : {type: GraphQLInt}
-    }
+      'age' : {type: GraphQLInt},
+      'friends' : {
+        type: new GraphQLList(userType),
+        description: 'Returns friends of the user. Returns empty array if user has no friends',
+        // resolve: (root)=>{
+        //   console.log('resolving friends');
+        //   console.log(root.name)
+        //   return User.
+        //     findOne({where: {name : root.name}})
+        //       .then(function(user){
+        //         console.log('test');
+        //         return user.getFriends();
+        //       })
+        // }
+      } //end of 'friends'
+    })
 });
 
 let blogpostType = new GraphQLObjectType({
