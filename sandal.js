@@ -27,29 +27,37 @@ async function graphQLHandler(req, res, schema){
 
 function Sandal(schema,uri){
   // eventually parse uri for different dbs
-  var sequelize = new Sequelize(uri);
 
-  console.log(schema._typeMap.user._fields.friends);
+  var sequelize = new Sequelize(uri);
+  var QUERY_FIELDS = schema._schemaConfig.query._fields;
+
+
+
+  //console.log(schema);
+  //console.log(schema._typeMap.user._fields.friends);
 
   //TODO: make relations work
   //manually define resolve for getUser query.
   //TODO: fix so that we don't have to hard code user query + resolve
-  schema._schemaConfig.query._fields.getUser.resolve = (root, {name})=>{
-    return tables['User']
-      .findOne({
-        where: { name : name }
-      })
-  }
+  // QUERY_FIELDS.getUser.resolve = (root, {name})=>{
+  //   return tables['User']
+  //     .findOne({
+  //       where: { name : name }
+  //     })
+  // }
+  //QUERY_FIELDS[getX] = {
+
+  //}
 
   //TODO: right now, hardcoded to ..._fields.friends. instead, we should automatically/
   //set the resolve upon initSequelizeRelations for userType etc.
   schema._typeMap.user._fields.friends.resolve = (root, {name})=>{
-            console.log('resolving friends');
-            console.log(root.name)
+            //console.log('resolving friends');
+            //console.log(root.name)
             return tables['User'].
               findOne({where: {name : root.name}})
                 .then(function(user){
-                  console.log('test');
+                  //console.log('test');
                   return user.getFriends();
                 })
           }
@@ -60,24 +68,32 @@ function Sandal(schema,uri){
     return defaultNames.indexOf(elem) < 0 && (elem[0] !== '_' || elem[1] !== '_');
   });
 
-  //convert extracted schemas into sequelize schemas
+  //convert extracted schemas into sequelize schemas, returns pairs of names and sequelize schema objects
   var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
 
-  console.log("relationsArray: " + relationsArray);
-  //initialize all user defined GraphQL models in sequelize.
+  //console.log('sequelizeSchemas:');
+  //console.log(sequelizeSchemas);
+  //initialize all user defined GraphQL models in sequelize with names and
+  //corresponding sequelize schema objects
   //models are stored in tables object. eg. tables['User'] returns 'user' table
   initSequelizeModels(sequelizeSchemas, sequelize);
+  createGetters(GraphQLModelNames, schema._typeMap, QUERY_FIELDS);
   initSequelizeRelations(relationsArray);
   //TODO: relations are currently hardcoded. fix this
   //tables['User'].belongsToMany(tables['User'], {as: 'friends', through: 'friendships'});
   sequelize.sync();
+
+  console.log('query fields');
+  console.log(QUERY_FIELDS.getUser.args);
+  console.log('query fields end');
+
 
   return function(req, res) {
     graphQLHandler(req, res, schema);
   }
 }
 
-var initSequelizeModels = (sequelizeSchemas, sequelize) => {
+function initSequelizeModels(sequelizeSchemas, sequelize){
   // take each schema, get its toUppercase name
   // add and sequelize define it to tables[modelName],
   // simultaneously create a list of modelNames
@@ -98,10 +114,14 @@ function convertSchema(modelNames, typeMap){
         fields = Object.keys(model._fields), //['name', 'age']
         sequelizeSchema = {},
         sequelizeFieldTypes = {String: Sequelize.STRING, Int: Sequelize.INTEGER};
-    console.log(fields); //expect ['name','age','friends']
+    //console.log(fields); //expect ['name','age','friends']
+    console.log('typeMap:', typeMap);
+    console.log("model:");
+    console.log(model);
     for(var j = 0; j < fields.length; j++) {
       //console.log(model._fields[fields[j]].type.name); //undefined for 'friends'
       //console.log(model);
+      //console.log(typeMap)
       //console.log(model._fields[fields[j]]);
       //if model._fields[fields[j]].type.name is undefined,
       //check to see if there is ofType (which seems to denote that it is a list)
@@ -120,6 +140,28 @@ function convertSchema(modelNames, typeMap){
     sequelizeArr.push([modelNames[i], sequelizeSchema]);
   }
     return sequelizeArr;
+}
+
+function createGetters(modelNames, typeMap, queryFields){
+  for(var i = 0; i < modelNames.length; i++){
+    var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
+    var getterName = 'get'+capitalizedName;
+    queryFields[getterName] = {
+      type: typeMap[modelNames[i]],
+      description: `gets ${modelNames[i]} object`,
+      args: {
+        name: {type: typeMap.String}
+      },
+      name: getterName,
+      resolve: (root, {name})=>{
+        console.log('reached created getter!');
+        return tables[capitalizedName]
+          .findOne({
+            where: { name : name }
+          })
+      }
+    };
+  }
 }
 
 function initSequelizeRelations(relations){
