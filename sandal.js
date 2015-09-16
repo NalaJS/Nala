@@ -40,20 +40,24 @@ function Sandal(schema,uri){
   //TODO: make relations work
   //manually define resolve for getUser query.
   //TODO: fix so that we don't have to hard code user query + resolve
-  QUERY_FIELDS.getUser.resolve = (root, {name})=>{
-    return tables['User']
-      .findOne({
-        where: { name : name }
-      })
-  };
-  QUERY_FIELDS.getUser.description= 'get user object with provided name';
+// QUERY_FIELDS.getUser = {
+//   type: schema._typeMap.user
+// };
 
-  QUERY_FIELDS.getUser.args = [{
-    name: 'name',
-    type: GraphQLString,
-    description: null,
-    defaultValue: null
-  }];
+  // QUERY_FIELDS.getUser.resolve = (root, {name})=>{
+  //   return tables['User']
+  //     .findOne({
+  //       where: { name : name }
+  //     })
+  // };
+  //QUERY_FIELDS.getUser.description= 'get user object with provided name';
+
+  // QUERY_FIELDS.getUser.args = [{
+  //   name: 'name',
+  //   type: GraphQLString,
+  //   description: null,
+  //   defaultValue: null
+  // }];
 
   //console.log(QUERY_FIELDS.getUser.args[0].name.type);
   //console.log('updated');
@@ -90,7 +94,7 @@ function Sandal(schema,uri){
   //corresponding sequelize schema objects
   //models are stored in tables object. eg. tables['User'] returns 'user' table
   initSequelizeModels(sequelizeSchemas, sequelize);
-  //createGetters(GraphQLModelNames, schema._typeMap, QUERY_FIELDS);
+  createGetters(GraphQLModelNames, schema._typeMap, QUERY_FIELDS);
   initSequelizeRelations(relationsArray);
 
   sequelize.sync();
@@ -185,19 +189,20 @@ function createGetters(modelNames, typeMap, queryFields){
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
     var getterName = 'get'+capitalizedName;
     queryFields[getterName] = {
-      type: typeMap[modelNames[i]],
-      description: `gets ${modelNames[i]} object`,
-      args: {
-        name: {type: typeMap.String},
-      },
-      name: getterName,
-      resolve: (root, {name})=>{
-        console.log('reached created getter!');
-        return tables[capitalizedName]
-          .findOne({
-            where: { name : name }
-          })
-      }
+      type: typeMap[modelNames[i]]
+    };
+    //TODO: getUser, getUserByName etc. by fields in userType
+    queryFields[getterName].args = [{
+        name: 'name',
+        type: GraphQLString,
+        description: null,
+        defaultValue: null
+      }];
+    queryFields[getterName].resolve = (root, {name})=>{
+      return tables[capitalizedName]
+        .findOne({
+          where: { name : name }
+        })
     };
   }
 }

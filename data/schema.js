@@ -44,14 +44,15 @@ let Query = new GraphQLObjectType({
   name: 'query',
   description: 'this is the root query',
   fields: {
+    //TODO: Currently a dummy to make compilable. Make a useful function e.g. introspect available queries
     presetFunctions:{type: GraphQLInt},
-    getUser: {
-      type: userType,
-      // description: 'get user object with provided name',
-      // args: {
-      //   name: {type: GraphQLString}
-      // }
-    }
+    // getUser: {
+    //   type: userType,
+    //   // description: 'get user object with provided name',
+    //   // args: {
+    //   //   name: {type: GraphQLString}
+    //   // }
+    // }
   }
 });
 
