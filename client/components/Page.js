@@ -67,11 +67,11 @@ getUser: function(event){
   var user = {'name' :this.state.searchName};
   var query = {
       //'query' : 'query queryUser{getUser(name:"'+user.name+'"){name, age}}',
-      'query' : 'query queryUser($name:String){getUserByName(name: $name){name, age, friends{name,age}}}',
+      'query' : 'query queryUser($name:Int){getUserByAge(age: $name){name, age, friends{name,age}}}',
       'variables': {'name':String(user.name)}
   }
   $.post('/', query, function(response){
-    console.dir(response.data.getUser);
+    console.dir(response.data);
   });
   this.setState({'searchName':''});
 },
