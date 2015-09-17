@@ -1,7 +1,5 @@
 var React = require('react');
 var $ = require('jQuery');
-// var {graphql} = require('graphql');
-// var Schema = require('../../schema');
 var AddFriend = require('./AddFriend');
 var RemoveFriend = require('./RemoveFriend');
 
@@ -69,7 +67,7 @@ getUser: function(event){
   var user = {'name' :this.state.searchName};
   var query = {
       //'query' : 'query queryUser{getUser(name:"'+user.name+'"){name, age}}',
-      'query' : 'query queryUser($name:String){getUser(name: $name){name, age, friends{name}}}',
+      'query' : 'query queryUser($name:String){getUser(name: $name){name, age, friends{name,age}}}',
       'variables': {'name':String(user.name)}
   }
   $.post('/', query, function(response){
