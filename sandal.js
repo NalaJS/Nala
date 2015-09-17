@@ -119,27 +119,51 @@ function createGetters(modelNames, typeMap, queryFields){
   for(var i = 0; i < modelNames.length; i++){
     //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var getterName = 'get'+capitalizedName;
+    var getterName;// = 'get'+capitalizedName;
     var modelFields = typeMap[modelNames[i]]._fields;
-    var modelFieldsNames = Object.keys(typeMap[modelNames[i]]._fields);
-    console.log(modelNames[i]+" fields:");
-    console.log(modelFields);
-    queryFields[getterName] = {
-      type: typeMap[modelNames[i]]
-    };
-    //TODO: getUser, getUserByName etc. by fields in userType
-    queryFields[getterName].args = [{
-        name: 'name',
-        type: typeMap.String, //GraphQLString
-        description: null,
-        defaultValue: null
-      }];
-    queryFields[getterName].resolve = (root, {name})=>{
-      return tables[capitalizedName]
-        .findOne({
-          where: { name : name }
-        })
-    };
+    //var modelFieldsNames = Object.keys(typeMap[modelNames[i]]._fields);
+
+    for (var field in modelFields){ //fields: name, age...
+        getterName = 'get'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);;
+        //console.log(getterName);
+        queryFields[getterName] = {
+          type: typeMap[modelNames[i]]
+        };
+        console.log(field);
+        queryFields[getterName].args = [{
+            name: field,
+            type: typeMap[modelFields[field].type.name],
+            description: null,
+            defaultValue: null
+          }];
+          //root.args[0]
+        queryFields[getterName].resolve = (root, {field})=>{
+          return tables[capitalizedName]
+            .findOne({
+              where: { name : field } 
+            })
+        };
+    }
+
+
+    // // console.log(modelNames[i]+" fields:");
+    // // console.log(modelFields);
+    // queryFields[getterName] = {
+    //   type: typeMap[modelNames[i]]
+    // };
+    // //TODO: getUser, getUserByName etc. by fields in userType
+    // queryFields[getterName].args = [{
+    //     name: 'name',
+    //     type: typeMap.String, //GraphQLString
+    //     description: null,
+    //     defaultValue: null
+    //   }];
+    // queryFields[getterName].resolve = (root, {name})=>{
+    //   return tables[capitalizedName]
+    //     .findOne({
+    //       where: { name : name }
+    //     })
+    // };
   }
 }
 
