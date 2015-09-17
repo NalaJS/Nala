@@ -119,35 +119,27 @@ function createGetters(modelNames, typeMap, queryFields){
   for(var i = 0; i < modelNames.length; i++){
     //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var getterName;// = 'get'+capitalizedName;
+    var getterName;
     var modelFields = typeMap[modelNames[i]]._fields;
-    //var modelFieldsNames = Object.keys(typeMap[modelNames[i]]._fields);
 
     for (var field in modelFields){ //fields: name, age...
         var tempObj = {};
         tempObj[field] = field;
+        //getterName = 'getUserByName, getUserByAge...'
         getterName = 'get'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);;
-        //console.log(getterName);
         queryFields[getterName] = {
           type: typeMap[modelNames[i]]
         };
-        console.log(field);
         queryFields[getterName].args = [{
             name: field,
             type: typeMap[modelFields[field].type.name],
             description: null,
             defaultValue: null
           }];
-          //root.args[0]
         queryFields[getterName].resolve = (root, args)=>{
-          //console.log('args'); //{ name: 'Ken' }
-          //console.log(args['name']);
-          //var key = Object.keys(args)[0];
-          //return 'test';
           return tables[capitalizedName]
             .findOne({
-              //where: {name : 'Ken'}
-              where: args//{ name : args[key] } //how to make first field variable?
+              where: args //e.g. { name : 'Ken' }
             })
 
         };
