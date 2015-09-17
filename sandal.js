@@ -120,6 +120,10 @@ function createGetters(modelNames, typeMap, queryFields){
     //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
     var getterName = 'get'+capitalizedName;
+    var modelFields = typeMap[modelNames[i]]._fields;
+    var modelFieldsNames = Object.keys(typeMap[modelNames[i]]._fields);
+    console.log(modelNames[i]+" fields:");
+    console.log(modelFields);
     queryFields[getterName] = {
       type: typeMap[modelNames[i]]
     };

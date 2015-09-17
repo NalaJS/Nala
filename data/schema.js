@@ -61,7 +61,7 @@ let Mutation = new GraphQLObjectType({
   description: 'this is the root mutation',
   fields: {
     addUser:{
-      type: userType,
+      type: blogpostType,
       args: {
         name: {type: GraphQLString},
         age: {type:GraphQLInt}
