@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import Sequelize from 'sequelize';
-import {graphql} from 'graphql';
+import {graphql, GraphQLList} from 'graphql';
 import util from 'util';
 
 let app = express();
@@ -120,13 +120,16 @@ function createGetters(modelNames, typeMap, queryFields){
     //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
     var getterName;
+    var getterNamePlural;
     var modelFields = typeMap[modelNames[i]]._fields;
 
     for (var field in modelFields){ //fields: name, age...
         var tempObj = {};
         tempObj[field] = field;
         //getterName = 'getUserByName, getUserByAge...'
-        getterName = 'get'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);;
+        getterName = 'get'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);
+
+        //singular
         queryFields[getterName] = {
           type: typeMap[modelNames[i]]
         };
@@ -138,32 +141,29 @@ function createGetters(modelNames, typeMap, queryFields){
           }];
         queryFields[getterName].resolve = (root, args)=>{
           return tables[capitalizedName]
-            .findOne({
-              where: args //e.g. { name : 'Ken' }
-            })
+              .findOne({
+                where: args //e.g. { name : 'Ken' }
+              });
+        };
 
+        //plural
+        getterNamePlural = 'get'+capitalizedName+'sBy'+field.charAt(0).toUpperCase()+field.slice(1);
+        queryFields[getterNamePlural] = {
+          type: new GraphQLList(typeMap[modelNames[i]])
+        };
+        queryFields[getterNamePlural].args = [{
+            name: field,
+            type: typeMap[modelFields[field].type.name],
+            description: null,
+            defaultValue: null
+          }];
+        queryFields[getterNamePlural].resolve = (root, args)=>{
+          return tables[capitalizedName]
+              .findAll({
+                where: args //e.g. { name : 'Ken' }
+              });
         };
     }
-
-
-    // // console.log(modelNames[i]+" fields:");
-    // // console.log(modelFields);
-    // queryFields[getterName] = {
-    //   type: typeMap[modelNames[i]]
-    // };
-    // //TODO: getUser, getUserByName etc. by fields in userType
-    // queryFields[getterName].args = [{
-    //     name: 'name',
-    //     type: typeMap.String, //GraphQLString
-    //     description: null,
-    //     defaultValue: null
-    //   }];
-    // queryFields[getterName].resolve = (root, {name})=>{
-    //   return tables[capitalizedName]
-    //     .findOne({
-    //       where: { name : name }
-    //     })
-    // };
   }
 }
 
