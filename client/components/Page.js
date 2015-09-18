@@ -2,6 +2,10 @@ var React = require('react');
 var $ = require('jQuery');
 var AddFriend = require('./AddFriend');
 var RemoveFriend = require('./RemoveFriend');
+var GetUserByAge = require('./GetUserByAge');
+var GetUserByName = require('./GetUserByName');
+var GetUsersByName = require('./GetUsersByName');
+var GetUsersByAge = require('./GetUsersByAge');
 
 var Page = React.createClass({
 
@@ -62,19 +66,7 @@ handleChangeFriend: function(event) {
     })
   },
 
-getUser: function(event){
-  event.preventDefault();
-  var user = {'name' :this.state.searchName};
-  var query = {
-      //'query' : 'query queryUser{getUser(name:"'+user.name+'"){name, age}}',
-      'query' : 'query queryUser($name:Int){getUsersByAge(age: $name){name, age, friends{name,age}}}',
-      'variables': {'name':String(user.name)}
-  }
-  $.post('/', query, function(response){
-    console.dir(response.data);
-  });
-  this.setState({'searchName':''});
-},
+
 
 addUser: function(event){
   event.preventDefault();
@@ -134,13 +126,7 @@ render: function() {
               <input type = "text"  value = {this.state.age} defaultValue = "" placeholder="Age" onChange = {this.handleChangeAge}/>
                <br/><br/>
               <button> Add </button>
-          </form>
-          <h3 style={h3style}>Retrieve User</h3>
-          <form onSubmit = {this.getUser}>
-              <input type = "text"  value = {this.state.searchName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeSearchName}/>
-              <br/><br/>
-              <button> Get </button>
-          </form>
+              </form>
           <h3 style={h3style}>Update User</h3>
           <form onSubmit = {this.updateUser}>
               <input type = "text"  value = {this.state.updateName} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeUpdateName}/>
@@ -163,6 +149,10 @@ render: function() {
           </p>
           <AddFriend/>
           <RemoveFriend/>
+          <GetUserByAge/>
+          <GetUserByName/>
+          <GetUsersByAge/>
+          <GetUsersByName/>
 	      </div>
 	    )
   }
