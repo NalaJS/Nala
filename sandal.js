@@ -133,6 +133,8 @@ function createGetters(modelNames, typeMap, queryFields){
         queryFields[getterName] = {
           type: typeMap[modelNames[i]]
         };
+        //TODO: single getUser without ByName etc. allow all args. if one is defined,
+        // use switch statements in resolve to choose which findOne to use
         queryFields[getterName].args = [{
             name: field,
             type: typeMap[modelFields[field].type.name],

@@ -86,7 +86,7 @@ let Mutation = new GraphQLObjectType({
       description: 'finds user of Name, and updates his/her Age',
       args:{
         name: {type: GraphQLString},
-        age: {type: GraphQLInt}
+        age: {type: GraphQLInt},
       },
       resolve: (root,{name,age})=>{
         User.update(
