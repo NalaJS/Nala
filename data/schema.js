@@ -60,27 +60,27 @@ let Mutation = new GraphQLObjectType({
   name: 'mutation',
   description: 'this is the root mutation',
   fields: {
-    addUser:{
-      type: userType,
-      args: {
-        name: {type: GraphQLString},
-        age: {type:GraphQLInt}
-      },
-      description: 'returns user object',
-      resolve: (root,{name, age})=>{
-      //add to database
-      //database returns userobject added
-      return User
-        .findOrCreate({
-          where: {
-            name : name
-          },
-          defaults:{
-            age: age,
-          }
-        }).spread(function(user){return user}); //why spread instead of then?
-    }
-    },
+    // addUser:{
+    //   type: userType,
+    //   args: {
+    //     name: {type: GraphQLString},
+    //     age: {type:GraphQLInt}
+    //   },
+    //   description: 'returns user object',
+    //   resolve: (root,{name, age})=>{
+    //   //add to database
+    //   //database returns userobject added
+    //   return User
+    //     .findOrCreate({
+    //       where: {
+    //         name : name
+    //       },
+    //       defaults:{
+    //         age: age,
+    //       }
+    //     }).spread(function(user){return user}); //why spread instead of then?
+    // }
+    // },
     updateUser:{
       type: userType,
       description: 'finds user of Name, and updates his/her Age',
