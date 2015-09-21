@@ -228,40 +228,37 @@ function createDestroyers(modelNames, typeMap, mutationFields){
   for(var i = 0; i < modelNames.length; i++){
     //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var destroyerName;
+    var destroyerName = 'destroy'+capitalizedName;
     var modelFields = typeMap[modelNames[i]]._fields;
+    var args = [];
 
     for (var field in modelFields){ //fields: name, age...
-        var tempObj = {};
-        tempObj[field] = field;
-        //destroyerName = 'destroyUserByName, destroyUserByAge...'
-        destroyerName = 'destroy'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);
-
-        //singular
-        mutationFields[destroyerName] = {
-          type: typeMap[modelNames[i]]
+      var argObj = {
+          name: field,
+          type: typeMap[modelFields[field].type.name],
+          description: null,
+          defaultValue: null
         };
-        //TODO: single getUser without ByName etc. allow all args. if one is defined,
-        // use switch statements in resolve to choose which findOne to use
-        mutationFields[destroyerName].args = [{
-            name: field,
-            type: typeMap[modelFields[field].type.name],
-            description: null,
-            defaultValue: null
-          }];
-        mutationFields[destroyerName].resolve = (root, args)=>{
-          var deletedObject = tables[capitalizedName]
-            .findOne({
-              where: args
-            }).then(function(data){
-              return data;
-            });
-          tables[capitalizedName].destroy({
-            where: args
-          })
-          return deletedObject;
-        };
+        args.push(argObj);
     }
+    mutationFields[destroyerName] = {
+      type: typeMap[modelNames[i]]
+    };
+
+    mutationFields[destroyerName].args = args;
+
+    mutationFields[destroyerName].resolve = (root, args)=>{
+      var deletedObject = tables[capitalizedName]
+        .findOne({
+          where: args
+        }).then(function(data){
+          return data;
+        });
+      tables[capitalizedName].destroy({
+        where: args
+      })
+      return deletedObject;
+    };
   }
 }
 
