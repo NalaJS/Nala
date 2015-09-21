@@ -6,7 +6,6 @@ var UpdateUser = React.createClass({
     return {
       name:'',
       age:'',
-      selector: '',
       displayFriends:''
     };
   },
@@ -23,25 +22,19 @@ var UpdateUser = React.createClass({
     })
   },
 
-  handleChangeUpdateSelector: function(event) {
-    this.setState({
-      selector: event.target.value
-    })
-  },
-
   updateUser: function(event){
     event.preventDefault();
-    var user  = {'name' :this.state.name, 'age' :this.state.age, 'selector':this.state.selector};
+    var user  = {'name' :this.state.name, 'age' :this.state.age};
     var query = {
-      'query' : 'mutation mutateUser($name:String, $age:Int, $selector:String){updateUser(name:$name,age:$age,selector:$selector){name,age}}',//'mutation updateUser{updateUser}',
-      'variables' : {'name': String(user.name), 'age':user.age, 'selector':user.selector}
+      'query' : 'mutation mutateUser($name:String, $age:Int){updateUser(_name:$name,age:$age){name,age}}',//'mutation updateUser{updateUser}',
+      'variables' : {'name': String(user.name), 'age':user.age}
     };
 
     $.post('/', query, function(response){
       console.log('updateUser returned: ');
       console.dir(response);
     });
-    this.setState({'name':'', 'age':'', 'selector':''});
+    this.setState({'name':'', 'age':''});
   },
 
     render: function() {
@@ -52,8 +45,6 @@ var UpdateUser = React.createClass({
               <input type = "text"  value = {this.state.name} defaultValue = "" placeholder="Enter Name" onChange = {this.handleChangeUpdateName}/>
               <br/>
               <input type = "text"  value = {this.state.age} defaultValue = "" placeholder="Age" onChange = {this.handleChangeUpdateAge}/>
-              <br/>
-              <input type = "text"  value = {this.state.selector} defaultValue = "" placeholder="Selector" onChange = {this.handleChangeUpdateSelector}/>
               <br/><br/>
               <button> Update </button>
           </form>

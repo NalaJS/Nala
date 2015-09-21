@@ -277,16 +277,17 @@ function createUpdaters(modelNames, typeMap, mutationFields){
         defaultValue: null
       };
       args.push(argsObj);
+      var argsObjSelector = {
+        name: "_"+field,
+        type: typeMap[modelFields[field].type.name],
+        description: null,
+        defaultValue: null
+      };
+      args.push(argsObjSelector);
     }
-    var argsObj = {
-      name: 'selector',
-      type: typeMap.String,
-      description: 'Specifies which argument is the selector',
-      defaultValue: null
-    };
-    args.push(argsObj);
 
     mutationFields[updaterName].args = args;
+    //console.log(mutationFields[updaterName].args);
     //console.log('mutationFields[updaterName]',mutationFields[updaterName]);
 
     mutationFields[updaterName].resolve = (root,args)=>{
@@ -295,10 +296,21 @@ function createUpdaters(modelNames, typeMap, mutationFields){
       var selectorObj = {};
       var updatedObj = {};
 
+      // for(var key in args){
+      //   if(key !== args.selector && key !== 'selector') updatedObj[key] = args[key];
+      // }
+      // selectorObj[args.selector] = args[args.selector];
+
+      //expect 1 of the underscored vars to be defined. make it selector
+      //should work for multiple selectors
       for(var key in args){
-        if(key !== args.selector && key !== 'selector') updatedObj[key] = args[key];
+        //if(key.charAt(0) === '_' && args[key] !== undefined) selectorObj[key.slice(1)] = args[key];
+        if(args[key] !== undefined){
+          if(key.charAt(0) === '_') selectorObj[key.slice(1)] = args[key];
+          else updatedObj[key] = args[key];
+        }
       }
-      selectorObj[args.selector] = args[args.selector];
+      //rest that are defined and are not _, make them updatedObj
 
       return tables[capitalizedName].update(
           updatedObj,
