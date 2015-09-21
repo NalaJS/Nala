@@ -242,14 +242,16 @@ function createDestroyers(modelNames, typeMap, mutationFields){
             defaultValue: null
           }];
         mutationFields[destroyerName].resolve = (root, args)=>{
-          console.log('reached destroyer');
-          return tables[capitalizedName]
-          .findOne({
+          var deletedObject = tables[capitalizedName]
+            .findOne({
+              where: args
+            }).then(function(data){
+              return data;
+            });
+          tables[capitalizedName].destroy({
             where: args
           })
-            .destroy({
-              where: args
-            })
+          return deletedObject;
         };
     }
   }
@@ -298,12 +300,14 @@ function createUpdaters(modelNames, typeMap, mutationFields){
       }
       selectorObj[args.selector] = args[args.selector];
 
-        tables[capitalizedName].update(
+      return tables[capitalizedName].update(
           updatedObj,
           {where:
             selectorObj
           }
-        )
+        ).then(function(data){
+          //do what you want with the returned data
+        });
     }
   }
 }
