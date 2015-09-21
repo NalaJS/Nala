@@ -129,53 +129,61 @@ function createGetters(modelNames, typeMap, queryFields){
   for(var i = 0; i < modelNames.length; i++){
     //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var getterName;
-    var getterNamePlural;
+    var getterName = 'get'+capitalizedName;//+'By'+field.charAt(0).toUpperCase()+field.slice(1);
+    var getterNamePlural = getterName+'s';
     var modelFields = typeMap[modelNames[i]]._fields;
+    getterName = 'get'+capitalizedName;//+'By'+field.charAt(0).toUpperCase()+field.slice(1);
+    var args  = [];
 
     for (var field in modelFields){ //fields: name, age...
-        var tempObj = {};
-        tempObj[field] = field;
-        //getterName = 'getUserByName, getUserByAge...'
-        getterName = 'get'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);
-
-        //singular
-        queryFields[getterName] = {
-          type: typeMap[modelNames[i]]
-        };
-        //TODO: single getUser without ByName etc. allow all args. if one is defined,
-        // use switch statements in resolve to choose which findOne to use
-        queryFields[getterName].args = [{
-            name: field,
-            type: typeMap[modelFields[field].type.name],
-            description: null,
-            defaultValue: null
-          }];
-        queryFields[getterName].resolve = (root, args)=>{
-          return tables[capitalizedName]
-              .findOne({
-                where: args //e.g. { name : 'Ken' }
-              });
-        };
-
-        //plural
-        getterNamePlural = 'get'+capitalizedName+'sBy'+field.charAt(0).toUpperCase()+field.slice(1);
-        queryFields[getterNamePlural] = {
-          type: new GraphQLList(typeMap[modelNames[i]])
-        };
-        queryFields[getterNamePlural].args = [{
-            name: field,
-            type: typeMap[modelFields[field].type.name],
-            description: null,
-            defaultValue: null
-          }];
-        queryFields[getterNamePlural].resolve = (root, args)=>{
-          return tables[capitalizedName]
-              .findAll({
-                where: args //e.g. { name : 'Ken' }
-              });
-        };
+      var argObject = {
+        name: field,
+        type: typeMap[modelFields[field].type.name],
+        description: null,
+        defaultValue: null
+      };
+      args.push(argObject);
     }
+
+    //singular, e.g. getUser
+    queryFields[getterName] = {
+      type: typeMap[modelNames[i]]
+    };
+
+    queryFields[getterName].args = args;
+
+    queryFields[getterName].resolve = (root, args)=>{
+      var selectorObj= {};
+      for (var key in args){
+        if (args[key] !== undefined){
+          selectorObj[key]= args[key];
+        }
+      }
+      return tables[capitalizedName]
+          .findOne({
+            where: selectorObj //e.g. { name : 'Ken' }
+          });
+    };
+
+    //plural, e.g. getUsers
+    queryFields[getterNamePlural] = {
+      type: new GraphQLList(typeMap[modelNames[i]])
+    };
+
+    queryFields[getterNamePlural].args = args;
+
+    queryFields[getterNamePlural].resolve = (root, args)=>{
+      var selectorObj= {};
+      for (var key in args){
+        if (args[key] !== undefined){
+          selectorObj[key]= args[key];
+        }
+      }
+      return tables[capitalizedName]
+          .findAll({
+            where: selectorObj //e.g. { name : 'Ken' }
+          });
+    };
   }
 }
 
@@ -296,11 +304,6 @@ function createUpdaters(modelNames, typeMap, mutationFields){
       var selectorObj = {};
       var updatedObj = {};
 
-      // for(var key in args){
-      //   if(key !== args.selector && key !== 'selector') updatedObj[key] = args[key];
-      // }
-      // selectorObj[args.selector] = args[args.selector];
-
       //expect 1 of the underscored vars to be defined. make it selector
       //should work for multiple selectors
       for(var key in args){
@@ -311,7 +314,7 @@ function createUpdaters(modelNames, typeMap, mutationFields){
         }
       }
       //rest that are defined and are not _, make them updatedObj
-
+      //TODO: possibly findOne and update
       return tables[capitalizedName].update(
           updatedObj,
           {where:

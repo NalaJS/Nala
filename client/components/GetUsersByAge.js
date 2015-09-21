@@ -22,7 +22,7 @@ var GetUsersByAge= React.createClass({
          var user = {'age' :this.state.age};
          var query = {
              //'query' : 'query queryUser{getUser(name:"'+user.name+'"){name, age}}',
-             'query' : 'query queryUser($age:Int){getUsersByAge(age: $age){name, age, friends{name,age}}}',
+             'query' : 'query queryUser($age:Int){getUsers(age: $age){name, age, friends{name,age}}}',
              'variables': {'age':String(user.age)}
          }
          $.post('/', query, function(response){

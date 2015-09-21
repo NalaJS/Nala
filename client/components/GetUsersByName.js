@@ -24,7 +24,7 @@ var GetUsersByName= React.createClass({
          console.log(user.name);
          var query = {
              //'query' : 'query queryUser{getUser(name:"'+user.name+'"){name, age}}',
-             'query' : 'query queryUser($name:String){getUsersByName(name: $name){name, age, friends{name,age}}}',
+             'query' : 'query queryUser($name:String){getUsers(name: $name){name, age, friends{name,age}}}',
              'variables': {'name':String(user.name)}
          }
          $.post('/', query, function(response){
