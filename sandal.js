@@ -63,6 +63,12 @@ function Sandal(schema,uri){
   //creates an adder function for each developer defined GraphQL Schema
   createAdders(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS);
 
+  //creates an updater function for each developer defined GraphQL Schema
+  createUpdaters(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS);
+
+  //creates destroyer functions for each developer defined GraphQL Schema
+  createDestroyers(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS);
+
   //initialize sequelize relations TODO: currently works for belongsToMany
   initSequelizeRelations(relationsArray);
 
@@ -199,7 +205,6 @@ function createAdders(modelNames, typeMap, mutationFields){
 
     mutationFields[adderName].resolve = (root,args)=>{
           //add to database
-          console.log('in addUser');
           return tables[capitalizedName]
             .findOrCreate({
               where: args,
@@ -208,34 +213,98 @@ function createAdders(modelNames, typeMap, mutationFields){
               // }
             }).spread(function(user){return user}); //why spread instead of then?
         }
+  }
+}
 
-        console.log(mutationFields);
+function createDestroyers(modelNames, typeMap, mutationFields){
+  for(var i = 0; i < modelNames.length; i++){
+    //'user' -> 'User'
+    var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
+    var destroyerName;
+    var modelFields = typeMap[modelNames[i]]._fields;
 
-    // for (var field in modelFields){ //fields: name, age...
-    //     var tempObj = {};
-    //     tempObj[field] = field;
-    //     //adderName = 'getUserByName, getUserByAge...'
-    //     adderName = 'get'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);
-    //
-    //     //singular
-    //     queryFields[adderName] = {
-    //       type: typeMap[modelNames[i]]
-    //     };
-    //     //TODO: single getUser without ByName etc. allow all args. if one is defined,
-    //     // use switch statements in resolve to choose which findOne to use
-    //     queryFields[adderName].args = [{
-    //         name: field,
-    //         type: typeMap[modelFields[field].type.name],
-    //         description: null,
-    //         defaultValue: null
-    //       }];
-    //     mutationFields[adderName].resolve = (root, args)=>{
-    //       return tables[capitalizedName]
-    //           .findOne({
-    //             where: args //e.g. { name : 'Ken' }
-    //           });
-    //     };
-    // }
+    for (var field in modelFields){ //fields: name, age...
+        var tempObj = {};
+        tempObj[field] = field;
+        //destroyerName = 'destroyUserByName, destroyUserByAge...'
+        destroyerName = 'destroy'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);
+
+        //singular
+        mutationFields[destroyerName] = {
+          type: typeMap[modelNames[i]]
+        };
+        //TODO: single getUser without ByName etc. allow all args. if one is defined,
+        // use switch statements in resolve to choose which findOne to use
+        mutationFields[destroyerName].args = [{
+            name: field,
+            type: typeMap[modelFields[field].type.name],
+            description: null,
+            defaultValue: null
+          }];
+        mutationFields[destroyerName].resolve = (root, args)=>{
+          console.log('reached destroyer');
+          return tables[capitalizedName]
+          .findOne({
+            where: args
+          })
+            .destroy({
+              where: args
+            })
+        };
+    }
+  }
+}
+
+function createUpdaters(modelNames, typeMap, mutationFields){
+  for(var i = 0; i < modelNames.length; i++){
+    //'user' -> 'User'
+    var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
+    var updaterName = 'update'+capitalizedName;
+    var modelFields = typeMap[modelNames[i]]._fields;
+
+    mutationFields[updaterName] = {
+      type: typeMap[modelNames[i]]
+    };
+
+    var args = [];
+    for (var field in modelFields){
+      var argsObj = {
+        name: field,
+        type: typeMap[modelFields[field].type.name],
+        description: null,
+        defaultValue: null
+      };
+      args.push(argsObj);
+    }
+    var argsObj = {
+      name: 'selector',
+      type: typeMap.String,
+      description: 'Specifies which argument is the selector',
+      defaultValue: null
+    };
+    args.push(argsObj);
+
+    mutationFields[updaterName].args = args;
+    //console.log('mutationFields[updaterName]',mutationFields[updaterName]);
+
+    mutationFields[updaterName].resolve = (root,args)=>{
+      //filter out selector from other args
+      console.log('in updateUser');
+      var selectorObj = {};
+      var updatedObj = {};
+
+      for(var key in args){
+        if(key !== args.selector && key !== 'selector') updatedObj[key] = args[key];
+      }
+      selectorObj[args.selector] = args[args.selector];
+
+        tables[capitalizedName].update(
+          updatedObj,
+          {where:
+            selectorObj
+          }
+        )
+    }
   }
 }
 

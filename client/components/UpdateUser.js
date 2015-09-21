@@ -26,7 +26,7 @@ var UpdateUser = React.createClass({
     event.preventDefault();
     var user  = {'name' :this.state.name, 'age' :this.state.age};
     var query = {
-      'query' : 'mutation mutateUser($name:String, $age:Int){updateUser(name:$name,age:$age){name,age}}',//'mutation updateUser{updateUser}',
+      'query' : 'mutation mutateUser($name:String, $age:Int){updateUser(name:$name,age:$age,selector:"name"){name,age}}',//'mutation updateUser{updateUser}',
       'variables' : {'name': String(user.name), 'age':user.age}
     };
 

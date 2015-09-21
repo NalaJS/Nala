@@ -18,7 +18,7 @@ var DeleteUser = React.createClass({
     event.preventDefault();
     var user = {'name' : this.state.name};
     var query = {
-      'query' : 'mutation mutateUser{deleteUser(name:"' + user.name + '"){name,age}}',
+      'query' : 'mutation mutateUser{destroyUserByName(name:"' + user.name + '"){name,age}}',
     };
     $.post('/', query, function(data){
       console.log('deleteUser returned: ');

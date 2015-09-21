@@ -45,7 +45,7 @@ let Query = new GraphQLObjectType({
   description: 'this is the root query',
   fields: {
     //TODO: Currently a dummy to make compilable. Make a useful function e.g. introspect available queries
-    presetFunctions:{type: GraphQLInt},
+    presetFunctions:{type: userType},
     // getUser: {
     //   type: userType,
     //   // description: 'get user object with provided name',
@@ -81,36 +81,36 @@ let Mutation = new GraphQLObjectType({
     //     }).spread(function(user){return user}); //why spread instead of then?
     // }
     // },
-    updateUser:{
-      type: userType,
-      description: 'finds user of Name, and updates his/her Age',
-      args:{
-        name: {type: GraphQLString},
-        age: {type: GraphQLInt},
-      },
-      resolve: (root,{name,age})=>{
-        User.update(
-          {age: age},
-          {where:
-            {name: name}
-          }
-        )
-      }
-    },
-    deleteUser:{
-      type: userType,
-      description: 'finds user of Name and removes user object from the database',
-      args:{
-        name: {type: GraphQLString}
-      },
-      resolve: (root, {name})=>{
-        console.log('root in deleteUser: ',root);
-        console.log('User in deleteUser: ',User);
-        return User.destroy({
-            where: {name: name}
-          })
-      }
-    },
+    // updateUser:{
+    //   type: userType,
+    //   description: 'finds user of Name, and updates his/her Age',
+    //   args:{
+    //     name: {type: GraphQLString},
+    //     age: {type: GraphQLInt},
+    //   },
+    //   resolve: (root,{name,age})=>{
+    //     User.update(
+    //       {age: age},
+    //       {where:
+    //         {name: name}
+    //       }
+    //     )
+    //   }
+    // },
+    // deleteUser:{
+    //   type: userType,
+    //   description: 'finds user of Name and removes user object from the database',
+    //   args:{
+    //     name: {type: GraphQLString}
+    //   },
+    //   resolve: (root, {name})=>{
+    //     console.log('root in deleteUser: ',root);
+    //     console.log('User in deleteUser: ',User);
+    //     return User.destroy({
+    //         where: {name: name}
+    //       })
+    //   }
+    // },
     addFriend:{
       type: GraphQLString,
       description: 'adds friendship between 2 users',
@@ -135,30 +135,30 @@ let Mutation = new GraphQLObjectType({
           });
       }
     },
-    removeFriend:{
-      type: GraphQLString,
-      description: 'remove friendship between 2 users',
-      args:{
-        user1: {type: GraphQLString},
-        user2: {type: GraphQLString}
-      },
-      resolve: (root, {user1, user2})=>{
-        User.findOne({
-            where: {
-              name: user1
-            }
-          }).then(function(userone, created){
-            User.findOne({
-              where: {
-                name: user2
-              }
-            }).then(function(usertwo, created){
-              userone.removeFriend(usertwo);
-              usertwo.removeFriend(userone);
-            })
-          });
-      }
-    }
+    // removeFriend:{
+    //   type: GraphQLString,
+    //   description: 'remove friendship between 2 users',
+    //   args:{
+    //     user1: {type: GraphQLString},
+    //     user2: {type: GraphQLString}
+    //   },
+    //   resolve: (root, {user1, user2})=>{
+    //     User.findOne({
+    //         where: {
+    //           name: user1
+    //         }
+    //       }).then(function(userone, created){
+    //         User.findOne({
+    //           where: {
+    //             name: user2
+    //           }
+    //         }).then(function(usertwo, created){
+    //           userone.removeFriend(usertwo);
+    //           usertwo.removeFriend(userone);
+    //         })
+    //       });
+    //   }
+    // }
   }
 });
 
