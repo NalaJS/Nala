@@ -32,14 +32,18 @@ function Sandal(schema,uri){
 
   //TODO: right now, hardcoded to ..._fields.friends. instead, we should automatically/
   //set the resolve upon initSequelizeRelations for userType etc.
-  schema._typeMap.user._fields.friends.resolve = (root, {name})=>{
-            return tables['User'].
-              findOne({where: {name : root.name}})
-                .then(function(user){
-                  return user.getFriends();
-                })
-          }
-
+//   for (var i = 0; i < relationsArray.length; i++){
+//     var relation = relationsArray[0][1].name;
+//     var type = relationsArray[0][0].charAt(0).toUpperCase()+relationsArray[0][0].slice(1);
+//
+//   schema._typeMap.user._fields.relation.resolve = (root, {name})=>{
+//             return tables[type].
+//               findOne({where: {name : root.name}})
+//                 .then(function(user){
+//                   return user.getFriends();
+//                 })
+//           }
+// }
   //extract user defined GraphQL schemas that we want to convert into sequelize schemas
   //we filter out the non-user defined ones by comparing them to defaultNames
   var defaultNames = ['String', 'query', 'Int', 'mutation', 'Boolean'];
@@ -70,8 +74,22 @@ function Sandal(schema,uri){
   createDestroyers(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS);
 
   //initialize sequelize relations TODO: currently works for belongsToMany
-  initSequelizeRelations(relationsArray);
+  initSequelizeRelations(relationsArray, schema._typeMap);
 
+  for (var i = 0; i < relationsArray.length; i++){
+    var relation = relationsArray[i][1].name;
+    var type = relationsArray[i][0];
+    var typeUpper = relationsArray[i][0].charAt(0).toUpperCase()+relationsArray[i][0].slice(1);
+
+
+    schema._typeMap[type]._fields[relation].resolve = (root, {name})=>{
+      return tables[typeUpper].
+        findOne({where: {name : root.name}})
+          .then(function(user){
+              return user.getFriends();
+          })
+    }
+  }
   sequelize.sync();
 
   //console.log(util.inspect(QUERY_FIELDS.getUser.args, {showHidden: false, depth :null} ));
@@ -111,6 +129,9 @@ function convertSchema(modelNames, typeMap){
       //if type.ofType is defined, it is GraphQLList.
       if (model._fields[fields[j]].type.ofType){
         relationsArray.push([model.name,model._fields[fields[j]]]);
+        console.log('relationsarray',relationsArray[0][1].name);
+        console.log('relationsarray',relationsArray[0][0]);
+
       }
       else { //isn't list
         sequelizeSchema[fields[j]] = {
@@ -188,6 +209,7 @@ function createGetters(modelNames, typeMap, queryFields){
 }
 
 function createAdders(modelNames, typeMap, mutationFields){
+
   for(var i = 0; i < modelNames.length; i++){
     //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
@@ -324,18 +346,29 @@ function createUpdaters(modelNames, typeMap, mutationFields){
   }
 }
 
-function initSequelizeRelations(relations){
+function initSequelizeRelations(relations, typeMap){
   for(var i = 0; i < relations.length; i++){
 
-    var table1Name = relations[i][0].charAt(0).toUpperCase()+relations[i][0].slice(1);
+    var modelName = relations[i][0];
+    var table1Name = modelName.charAt(0).toUpperCase()+modelName.slice(1);
     var table2Name = relations[i][1].type.ofType.name.charAt(0).toUpperCase()
                      + relations[i][1].type.ofType.name.slice(1);
     var relationName = relations[i][1].name;
+    var getterName = 'get'+relationName.charAt(0).toUpperCase()+relationName.slice(1)+'s';
     //TODO: hardcoded to friendships because adding friends to friendsTable isn't working yet
     var relationTableName = 'friendships';//relations[i][1].name+'Table';
 
     //console.log(table1Name, table2Name, relationName, relationTableName);
     tables[table1Name].belongsToMany(tables[table2Name],{as : relationName, through: relationTableName});
+
+    typeMap[modelName]._fields[relationName].resolve = (root, {name})=>{
+      return tables[table1Name].
+        findOne({where: {name : root.name}})
+          .then(function(model){
+              return model[getterName]();
+          })
+    }
+
   }
 }
 
