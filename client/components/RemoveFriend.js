@@ -25,10 +25,10 @@ var RemoveFriend = React.createClass({
    removeFriend: function(event) {
       event.preventDefault();
       console.log('removing buddy');
-      var data = {"user1": this.state.user1, "user2": this.state.user2};
+      var data = {"user1": {name : this.state.user1}, "user2": {name : this.state.user2}};
       var query = {
-        'query' : 'mutation mutateUser($user1:String, $user2:String){removeFriend(user1:$user1,user2:$user2)}',
-        'variables':{'user1':String(data.user1), 'user2':String(data.user2)}
+        'query' : 'mutation mutateUser($user1:String, $user2:String){removeFriends(model1:$user1,model2:$user2)}',
+        'variables':{'user1':JSON.stringify(data.user1), 'user2':JSON.stringify(data.user2)}
       };
       $.post('/', query, function(data){
         console.log("removingFriend returned: ", data);
