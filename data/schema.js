@@ -47,30 +47,31 @@ let Mutation = new GraphQLObjectType({
   name: 'mutation',
   description: 'this is the root mutation',
   fields: {
-    addFriend:{
-      type: GraphQLString,
-      description: 'adds friendship between 2 users',
-      args:{
-        user1: {type: GraphQLString},
-        user2: {type: GraphQLString}
-      },
-      resolve: (root, {user1, user2})=>{
-        User.findOne({
-            where: {
-              name: user1
-            }
-          }).then(function(userone, created){
-            User.findOne({
-              where: {
-                name: user2
-              }
-            }).then(function(usertwo, created){
-              userone.addFriend(usertwo);
-              usertwo.addFriend(userone);
-            })
-          });
-      }
-    },
+    presentMutator:{type: userType},
+    // addFriend:{
+    //   type: GraphQLString,
+    //   description: 'adds friendship between 2 users',
+    //   args:{
+    //     user1: {type: GraphQLString},
+    //     user2: {type: GraphQLString}
+    //   },
+    //   resolve: (root, {user1, user2})=>{
+    //     User.findOne({
+    //         where: {
+    //           name: user1
+    //         }
+    //       }).then(function(userone, created){
+    //         User.findOne({
+    //           where: {
+    //             name: user2
+    //           }
+    //         }).then(function(usertwo, created){
+    //           userone.addFriend(usertwo);
+    //           usertwo.addFriend(userone);
+    //         })
+    //       });
+    //   }
+    // },
     // removeFriend:{
     //   type: GraphQLString,
     //   description: 'remove friendship between 2 users',

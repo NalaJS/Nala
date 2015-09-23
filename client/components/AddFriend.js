@@ -4,8 +4,8 @@ var React = require('react'),
 var AddFriend = React.createClass({
   getInitialState: function(){
     return {
-      user1:'',
-      user2:'',
+      name1:'',
+      name2:'',
       displayFriends:''
     };
   },
@@ -13,12 +13,12 @@ var AddFriend = React.createClass({
   //Handles the adding of a friend. enter in name and who you want to add as friend.
    handleUser1: function(event) {
      this.setState({
-       user1: event.target.value
+       name1: event.target.value
      })
    },
    handleUser2: function(event) {
      this.setState({
-       user2: event.target.value
+       name2: event.target.value
      })
    },
 
@@ -26,17 +26,18 @@ var AddFriend = React.createClass({
    addFriend: function(event) {
       event.preventDefault();
       console.log('adding buddy');
-      var data = {"user1": this.state.user1, "user2": this.state.user2};
+      //var data = {"name1": this.state.name1, "name2": this.state.name2};
+      var data = {"name1": {name : this.state.name1}, "name2": {name : this.state.name2}};
 
       var query = {
-        'query' : 'mutation mutateUser($user1:String, $user2:String){addFriend(user1:$user1,user2:$user2)}',
-        'variables': {'user1':String(data.user1), 'user2':String(data.user2)}
+        'query' : 'mutation mutateUser($name1:String, $name2:String){addFriends(model1: $name1, model2:$name2)}',
+        'variables': {'name1':JSON.stringify(data.name1), 'name2':JSON.stringify(data.name2)} //data.name1 is an object
       };
-      
+
       $.post('/', query, function(data){
         console.log("addFriend returned: ", data);
       })
-      this.setState({'user1':'', 'user2':''});
+      this.setState({'name1':'', 'name2':''});
 
 
     },
@@ -46,8 +47,8 @@ var AddFriend = React.createClass({
     	      <div>
             <h3>Add Friend</h3>
             <form onSubmit = {this.addFriend}>
-              <input type = "text" value = {this.state.user1} defaultValue = "" placeholder = "username" onChange = {this.handleUser1}/>
-              <input type = "text" value = {this.state.user2} defaultValue = "" placeholder = "friend" onChange = {this.handleUser2}/>
+              <input type = "text" value = {this.state.name1} defaultValue = "" placeholder = "username" onChange = {this.handleUser1}/>
+              <input type = "text" value = {this.state.name2} defaultValue = "" placeholder = "friend" onChange = {this.handleUser2}/>
               <button>Add Buddy</button>
             </form>
             <p>{this.state.displayFriends} </p>

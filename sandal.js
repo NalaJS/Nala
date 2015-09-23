@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import Sequelize from 'sequelize';
-import {graphql, GraphQLList} from 'graphql';
+import {graphql, GraphQLObjectType, GraphQLList} from 'graphql';
 import util from 'util';
 
 let app = express();
@@ -74,7 +74,7 @@ function Sandal(schema,uri){
   createDestroyers(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS);
 
   //initialize sequelize relations TODO: currently works for belongsToMany
-  initSequelizeRelations(relationsArray, schema._typeMap);
+  initSequelizeRelations(relationsArray, schema._typeMap, MUTATION_FIELDS);
 
   for (var i = 0; i < relationsArray.length; i++){
     var relation = relationsArray[i][1].name;
@@ -93,7 +93,7 @@ function Sandal(schema,uri){
   sequelize.sync();
 
   //console.log(util.inspect(QUERY_FIELDS.getUser.args, {showHidden: false, depth :null} ));
-
+    //console.log('typemap',schema._typeMap);
   return function(req, res) {
     graphQLHandler(req, res, schema);
   }
@@ -346,7 +346,7 @@ function createUpdaters(modelNames, typeMap, mutationFields){
   }
 }
 
-function initSequelizeRelations(relations, typeMap){
+function initSequelizeRelations(relations, typeMap, mutationFields){
   for(var i = 0; i < relations.length; i++){
 
     var modelName = relations[i][0];
@@ -354,20 +354,70 @@ function initSequelizeRelations(relations, typeMap){
     var table2Name = relations[i][1].type.ofType.name.charAt(0).toUpperCase()
                      + relations[i][1].type.ofType.name.slice(1);
     var relationName = relations[i][1].name;
-    var getterName = 'get'+relationName.charAt(0).toUpperCase()+relationName.slice(1)+'s';
+    var getterName = 'get'+relationName.charAt(0).toUpperCase()+relationName.slice(1);
+    var creatorName = 'add'+relationName.charAt(0).toUpperCase()+relationName.slice(1);
+    var destroyerName = 'remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1);
+
     //TODO: hardcoded to friendships because adding friends to friendsTable isn't working yet
-    var relationTableName = 'friendships';//relations[i][1].name+'Table';
+    var relationTableName = relationName+'_table';//'friendships';
+    console.log('relationTableName',relationTableName);
 
     //console.log(table1Name, table2Name, relationName, relationTableName);
     tables[table1Name].belongsToMany(tables[table2Name],{as : relationName, through: relationTableName});
 
-    typeMap[modelName]._fields[relationName].resolve = (root, {name})=>{
+    //relations getter
+    typeMap[modelName]._fields[relationName].resolve = (root)=>{
       return tables[table1Name].
         findOne({where: {name : root.name}})
           .then(function(model){
               return model[getterName]();
           })
     }
+
+    //creates relations creators
+    console.log('getterName,',getterName);
+    console.log('creatorName,',creatorName); //addFriends
+    console.log('typemap inputval', typeMap.__InputValue._fields);
+
+    mutationFields[creatorName] = {
+      type: typeMap.String //success/error
+    };
+
+    mutationFields[creatorName].args = [{
+      name: 'model1',
+      type: typeMap.String,
+      description: null,
+      defaultValue: null
+    },
+    {
+      name: 'model2',
+      type: typeMap.String,//[modelFields[field].type.name],
+      description: null,
+      defaultValue: null
+    }];
+
+    mutationFields[creatorName].resolve = (root, {model1, model2})=>{
+        console.log('in resolve of',creatorName);
+        var m1 = JSON.parse(model1);
+        var m2 = JSON.parse(model2);
+        console.log('model1',m1);
+        console.log('model2',m2);
+        console.log('add'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1));
+            tables[table1Name].findOne({
+                where: m1//{name: model1}
+              }).then(function(found1, created){
+                tables[table2Name].findOne({
+                  where: m2//{name: model2}
+                }).then(function(found2, created){
+                  //TODO: currently hacky way of turning addFriends -> addFriend, which is created by Sequelize
+                  found1['add'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1)](found2);
+                  //found2[addBlah2](found1);
+                })
+              });
+          }
+
+          //console.log(mutationFields);
+    //creates relations destroyers
 
   }
 }
