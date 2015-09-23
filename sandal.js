@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import Sequelize from 'sequelize';
 import {graphql, GraphQLObjectType, GraphQLList} from 'graphql';
+import createGetters from './lib/CreateGetters';
 import util from 'util';
 
 let app = express();
@@ -30,20 +31,6 @@ function Sandal(schema,uri){
   var QUERY_FIELDS = schema._schemaConfig.query._fields;
   var MUTATION_FIELDS = schema._schemaConfig.mutation._fields;
 
-  //TODO: right now, hardcoded to ..._fields.friends. instead, we should automatically/
-  //set the resolve upon initSequelizeRelations for userType etc.
-//   for (var i = 0; i < relationsArray.length; i++){
-//     var relation = relationsArray[0][1].name;
-//     var type = relationsArray[0][0].charAt(0).toUpperCase()+relationsArray[0][0].slice(1);
-//
-//   schema._typeMap.user._fields.relation.resolve = (root, {name})=>{
-//             return tables[type].
-//               findOne({where: {name : root.name}})
-//                 .then(function(user){
-//                   return user.getFriends();
-//                 })
-//           }
-// }
   //extract user defined GraphQL schemas that we want to convert into sequelize schemas
   //we filter out the non-user defined ones by comparing them to defaultNames
   var defaultNames = ['String', 'query', 'Int', 'mutation', 'Boolean'];
@@ -62,7 +49,7 @@ function Sandal(schema,uri){
   initSequelizeModels(sequelizeSchemas, sequelize);
 
   //creates the getter functions for each developer defined GraphQL Schema
-  createGetters(GraphQLModelNames, schema._typeMap, QUERY_FIELDS);
+  createGetters(GraphQLModelNames, schema._typeMap, QUERY_FIELDS, tables);
 
   //creates an adder function for each developer defined GraphQL Schema
   createAdders(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS);
@@ -129,8 +116,8 @@ function convertSchema(modelNames, typeMap){
       //if type.ofType is defined, it is GraphQLList.
       if (model._fields[fields[j]].type.ofType){
         relationsArray.push([model.name,model._fields[fields[j]]]);
-        console.log('relationsarray',relationsArray[0][1].name);
-        console.log('relationsarray',relationsArray[0][0]);
+        // console.log('relationsarray',relationsArray[0][1].name);
+        // console.log('relationsarray',relationsArray[0][0]);
 
       }
       else { //isn't list
@@ -143,69 +130,6 @@ function convertSchema(modelNames, typeMap){
     sequelizeArr.push([modelNames[i], sequelizeSchema]);
   }
     return sequelizeArr;
-}
-
-//modelNames: array of user created GraphQL model names e.g.['user', 'blogpost']
-function createGetters(modelNames, typeMap, queryFields){
-  for(var i = 0; i < modelNames.length; i++){
-    //'user' -> 'User'
-    var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var getterName = 'get'+capitalizedName;//+'By'+field.charAt(0).toUpperCase()+field.slice(1);
-    var getterNamePlural = getterName+'s';
-    var modelFields = typeMap[modelNames[i]]._fields;
-    getterName = 'get'+capitalizedName;//+'By'+field.charAt(0).toUpperCase()+field.slice(1);
-    var args  = [];
-
-    for (var field in modelFields){ //fields: name, age...
-      var argObject = {
-        name: field,
-        type: typeMap[modelFields[field].type.name],
-        description: null,
-        defaultValue: null
-      };
-      args.push(argObject);
-    }
-
-    //singular, e.g. getUser
-    queryFields[getterName] = {
-      type: typeMap[modelNames[i]]
-    };
-
-    queryFields[getterName].args = args;
-
-    queryFields[getterName].resolve = (root, args)=>{
-      var selectorObj= {};
-      for (var key in args){
-        if (args[key] !== undefined){
-          selectorObj[key]= args[key];
-        }
-      }
-      return tables[capitalizedName]
-          .findOne({
-            where: selectorObj //e.g. { name : 'Ken' }
-          });
-    };
-
-    //plural, e.g. getUsers
-    queryFields[getterNamePlural] = {
-      type: new GraphQLList(typeMap[modelNames[i]])
-    };
-
-    queryFields[getterNamePlural].args = args;
-
-    queryFields[getterNamePlural].resolve = (root, args)=>{
-      var selectorObj= {};
-      for (var key in args){
-        if (args[key] !== undefined){
-          selectorObj[key]= args[key];
-        }
-      }
-      return tables[capitalizedName]
-          .findAll({
-            where: selectorObj //e.g. { name : 'Ken' }
-          });
-    };
-  }
 }
 
 function createAdders(modelNames, typeMap, mutationFields){
@@ -319,7 +243,7 @@ function createUpdaters(modelNames, typeMap, mutationFields){
 
     mutationFields[updaterName].resolve = (root,args)=>{
       //filter out selector from other args
-      console.log('in updateUser');
+      // console.log('in updateUser');
       var selectorObj = {};
       var updatedObj = {};
 
@@ -354,13 +278,12 @@ function initSequelizeRelations(relations, typeMap, mutationFields){
     var table2Name = relations[i][1].type.ofType.name.charAt(0).toUpperCase()
                      + relations[i][1].type.ofType.name.slice(1);
     var relationName = relations[i][1].name;
-    var getterName = 'get'+relationName.charAt(0).toUpperCase()+relationName.slice(1);
-    var creatorName = 'add'+relationName.charAt(0).toUpperCase()+relationName.slice(1);
-    var destroyerName = 'remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1);
+    var getterName = 'get'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//getFriends
+    var creatorName = 'add'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//addFriends
+    var destroyerName = 'remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//removeFriends
 
-    //TODO: hardcoded to friendships because adding friends to friendsTable isn't working yet
-    var relationTableName = relationName+'_table';//'friendships';
-    console.log('relationTableName',relationTableName);
+    var relationTableName = relationName+'_table'; //friends_table
+    // console.log('relationTableName',relationTableName);
 
     //console.log(table1Name, table2Name, relationName, relationTableName);
     tables[table1Name].belongsToMany(tables[table2Name],{as : relationName, through: relationTableName});
@@ -374,10 +297,11 @@ function initSequelizeRelations(relations, typeMap, mutationFields){
           })
     }
 
+    //TODO: Modularize!
     //creates relations creators
-    console.log('getterName,',getterName);
-    console.log('creatorName,',creatorName); //addFriends
-    console.log('typemap inputval', typeMap.__InputValue._fields);
+    // console.log('getterName,',getterName);
+    // console.log('creatorName,',creatorName); //addFriends
+    // console.log('typemap inputval', typeMap.__InputValue._fields);
 
     mutationFields[creatorName] = {
       type: typeMap.String //success/error
@@ -397,12 +321,12 @@ function initSequelizeRelations(relations, typeMap, mutationFields){
     }];
 
     mutationFields[creatorName].resolve = (root, {model1, model2})=>{
-        console.log('in resolve of',creatorName);
+        // console.log('in resolve of',creatorName);
         var m1 = JSON.parse(model1);
         var m2 = JSON.parse(model2);
-        console.log('model1',m1);
-        console.log('model2',m2);
-        console.log('add'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1));
+        // console.log('model1',m1);
+        // console.log('model2',m2);
+        // console.log('add'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1));
             tables[table1Name].findOne({
                 where: m1//{name: model1}
               }).then(function(found1, created){
@@ -411,13 +335,13 @@ function initSequelizeRelations(relations, typeMap, mutationFields){
                 }).then(function(found2, created){
                   //TODO: currently hacky way of turning addFriends -> addFriend, which is created by Sequelize
                   found1['add'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1)](found2);
-                  //found2[addBlah2](found1);
                 })
               });
           }
 
+    //TODO: Modularize!
     //create relationRemovers
-    console.log('destroyerName,',destroyerName); //removeFriends
+    //console.log('destroyerName,',destroyerName); //removeFriends
 
     mutationFields[destroyerName] = {
       type: typeMap.String //success/error
