@@ -3,6 +3,10 @@ import bodyParser from 'body-parser';
 import Sequelize from 'sequelize';
 import {graphql, GraphQLObjectType, GraphQLList} from 'graphql';
 import createGetters from './lib/CreateGetters';
+import createAdders from './lib/CreateAdders';
+import createUpdaters from './lib/CreateUpdaters';
+import createDestroyers from './lib/CreateDestroyers';
+
 import util from 'util';
 
 let app = express();
@@ -52,13 +56,13 @@ function Sandal(schema,uri){
   createGetters(GraphQLModelNames, schema._typeMap, QUERY_FIELDS, tables);
 
   //creates an adder function for each developer defined GraphQL Schema
-  createAdders(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS);
+  createAdders(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS, tables);
 
   //creates an updater function for each developer defined GraphQL Schema
-  createUpdaters(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS);
+  createUpdaters(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS, tables);
 
   //creates destroyer functions for each developer defined GraphQL Schema
-  createDestroyers(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS);
+  createDestroyers(GraphQLModelNames, schema._typeMap, MUTATION_FIELDS, tables);
 
   //initialize sequelize relations TODO: currently works for belongsToMany
   initSequelizeRelations(relationsArray, schema._typeMap, MUTATION_FIELDS);
@@ -132,144 +136,6 @@ function convertSchema(modelNames, typeMap){
     return sequelizeArr;
 }
 
-function createAdders(modelNames, typeMap, mutationFields){
-
-  for(var i = 0; i < modelNames.length; i++){
-    //'user' -> 'User'
-    var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var adderName = 'add'+capitalizedName;
-    var modelFields = typeMap[modelNames[i]]._fields;
-
-    mutationFields[adderName] = {
-      type: typeMap[modelNames[i]]
-    };
-
-    var args = [];
-    for (var field in modelFields){
-      var argsObj = {
-        name: field,
-        type: typeMap[modelFields[field].type.name],
-        description: null,
-        defaultValue: null
-      };
-      args.push(argsObj);
-    }
-
-    mutationFields[adderName].args = args;
-
-    mutationFields[adderName].resolve = (root,args)=>{
-          //add to database
-          return tables[capitalizedName]
-            .findOrCreate({
-              where: args,
-              // defaults:{
-              //   age: age,
-              // }
-            }).spread(function(user){return user}); //why spread instead of then?
-        }
-  }
-}
-
-function createDestroyers(modelNames, typeMap, mutationFields){
-  for(var i = 0; i < modelNames.length; i++){
-    //'user' -> 'User'
-    var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var destroyerName = 'destroy'+capitalizedName;
-    var modelFields = typeMap[modelNames[i]]._fields;
-    var args = [];
-
-    for (var field in modelFields){ //fields: name, age...
-      var argObj = {
-          name: field,
-          type: typeMap[modelFields[field].type.name],
-          description: null,
-          defaultValue: null
-        };
-        args.push(argObj);
-    }
-    mutationFields[destroyerName] = {
-      type: typeMap[modelNames[i]]
-    };
-
-    mutationFields[destroyerName].args = args;
-
-    mutationFields[destroyerName].resolve = (root, args)=>{
-      var deletedObject = tables[capitalizedName]
-        .findOne({
-          where: args
-        }).then(function(data){
-          return data;
-        });
-      tables[capitalizedName].destroy({
-        where: args
-      })
-      return deletedObject;
-    };
-  }
-}
-
-function createUpdaters(modelNames, typeMap, mutationFields){
-  for(var i = 0; i < modelNames.length; i++){
-    //'user' -> 'User'
-    var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var updaterName = 'update'+capitalizedName;
-    var modelFields = typeMap[modelNames[i]]._fields;
-
-    mutationFields[updaterName] = {
-      type: typeMap[modelNames[i]]
-    };
-
-    var args = [];
-    for (var field in modelFields){
-      var argsObj = {
-        name: field,
-        type: typeMap[modelFields[field].type.name],
-        description: null,
-        defaultValue: null
-      };
-      args.push(argsObj);
-      var argsObjSelector = {
-        name: "_"+field,
-        type: typeMap[modelFields[field].type.name],
-        description: null,
-        defaultValue: null
-      };
-      args.push(argsObjSelector);
-    }
-
-    mutationFields[updaterName].args = args;
-    //console.log(mutationFields[updaterName].args);
-    //console.log('mutationFields[updaterName]',mutationFields[updaterName]);
-
-    mutationFields[updaterName].resolve = (root,args)=>{
-      //filter out selector from other args
-      // console.log('in updateUser');
-      var selectorObj = {};
-      var updatedObj = {};
-
-      //expect 1 of the underscored vars to be defined. make it selector
-      //should work for multiple selectors
-      for(var key in args){
-        //if(key.charAt(0) === '_' && args[key] !== undefined) selectorObj[key.slice(1)] = args[key];
-        if(args[key] !== undefined){
-          if(key.charAt(0) === '_') selectorObj[key.slice(1)] = args[key];
-          else updatedObj[key] = args[key];
-        }
-      }
-      //rest that are defined and are not _, make them updatedObj
-      //TODO: possibly findOne and update
-      return tables[capitalizedName].update(
-          updatedObj,
-          {where:
-            selectorObj
-          }
-        ).then(function(data){
-          //do what you want with the returned data
-        });
-    }
-  }
-}
-
 function initSequelizeRelations(relations, typeMap, mutationFields){
   for(var i = 0; i < relations.length; i++){
 
@@ -320,12 +186,11 @@ function initSequelizeRelations(relations, typeMap, mutationFields){
       defaultValue: null
     }];
 
+    //
     mutationFields[creatorName].resolve = (root, {model1, model2})=>{
         // console.log('in resolve of',creatorName);
         var m1 = JSON.parse(model1);
         var m2 = JSON.parse(model2);
-        // console.log('model1',m1);
-        // console.log('model2',m2);
         // console.log('add'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1));
             tables[table1Name].findOne({
                 where: m1//{name: model1}
@@ -361,11 +226,8 @@ function initSequelizeRelations(relations, typeMap, mutationFields){
     }];
 
     mutationFields[destroyerName].resolve = (root, {model1, model2})=>{
-        // console.log('in resolve of',destroyerName);
         var m1 = JSON.parse(model1);
         var m2 = JSON.parse(model2);
-        // console.log('model1',m1);
-        // console.log('model2',m2);
         // console.log('remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1));
             tables[table1Name].findOne({
                 where: m1
