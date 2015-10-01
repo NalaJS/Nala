@@ -2,16 +2,14 @@ import express from 'express';
 import {graphql} from 'graphql';
 import Schema from './data/schema.js';
 import bodyParser from 'body-parser';
-import Sequelize from 'sequelize';
-var Sandal = require('./sandal.js');
-
+var Nala = require('./sandal.js');
 
 let app = express();
 
 app.use(express.static('client'));
 app.use(bodyParser.urlencoded());
 
-var cb = Sandal(Schema, 'postgres://localhost/test'); // => function(req, res) { }
+var cb = Nala(Schema, 'postgres://localhost/test'); // => function(req, res) { }
 
 app.post('/',cb);
 
