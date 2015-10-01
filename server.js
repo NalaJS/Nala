@@ -2,34 +2,19 @@ import express from 'express';
 import {graphql} from 'graphql';
 import Schema from './data/schema.js';
 import bodyParser from 'body-parser';
+var Nala = require('./sandal.js');
 
 let app = express();
 
 app.use(express.static('client'));
 app.use(bodyParser.urlencoded());
 
-async function graphQLHandler(req, res){
-  const {query, variables = {}} = req.body;
-  console.log(query);
-  console.log(variables);
-  const result = await graphql(
-    Schema,
-    query,
-    {},
-    variables
-  );
-  res.send(result);
-}
+var cb = Nala(Schema, 'postgres://localhost/test'); // => function(req, res) { }
 
-app.post('/', graphQLHandler);
-// var Sandal = require('sandle');
-// var cb = Sandal(Schema, uri); // => function(req, res) { }
-// app.post('/',cb);
+app.post('/',cb);
 
 app.listen(process.env.PORT || 3000, function(){
   console.log("Server is listening on port 3000.");
-  //sequelize = new Sequelize('postgres://localhost/test');
 });
 
 module.exports = app;
-//module.exports.sequelize = sequelize;
