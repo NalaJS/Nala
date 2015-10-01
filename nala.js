@@ -13,7 +13,7 @@ let app = express();
 var tables = {}; //holds our sequelize tables
 var relationsArray = [];
 
-console.log('Sandal is running');
+console.log('Nala is running');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
@@ -29,7 +29,7 @@ async function graphQLHandler(req, res, schema){
   res.send(result);
 }
 
-function Sandal(schema,uri){
+function Nala(schema,uri){
   //TODO: eventually parse uri for different dbs
   var sequelize = new Sequelize(uri);
   var QUERY_FIELDS = schema._schemaConfig.query._fields;
@@ -251,4 +251,4 @@ function createRelationRemovers(destroyerName, relationName, tables, table1Name,
         }
 }
 
-module.exports = Sandal;
+module.exports = Nala;
