@@ -9,7 +9,7 @@ let app = express();
 app.use(express.static('client'));
 app.use(bodyParser.urlencoded());
 
-var graphQLHandler = Nala(Schema, 'postgres://localhost/test');
+var graphQLHandler = Nala(Schema, 'postgres://localhost/starwars');
 
 app.post('/',graphQLHandler);
 
