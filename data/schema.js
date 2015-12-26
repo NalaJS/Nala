@@ -13,7 +13,10 @@ let userType = new GraphQLObjectType({
     description: 'this is the user type',
     fields : ()=>({
       'name' : {type: GraphQLString},
-      'age' : {type: GraphQLInt},
+      'species' : {type: GraphQLString},
+      'gender' : {type: GraphQLString},
+      'birthyear' : {type: GraphQLString},
+      'homeworld' : {type: GraphQLString},
       'friends' : {
         type: new GraphQLList(userType),
         description: 'Returns friends of the user. Returns empty array if user has no friends',
@@ -21,12 +24,11 @@ let userType = new GraphQLObjectType({
     })
 });
 
-let blogpostType = new GraphQLObjectType({
+let planetType = new GraphQLObjectType({
   name: 'blogpost',
   description: 'this is the blogpost object',
   fields: {
-    'title': {type: GraphQLString},
-    'content': {type: GraphQLString}
+    'residents': {type: GraphQLString}
   }
 });
 
