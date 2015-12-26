@@ -182,6 +182,8 @@ relationName
 */
 function createRelationCreators(creatorName, relationName, tables, table1Name, table2Name, mutationFields, typeMap){
   mutationFields[creatorName] = {
+    name: creatorName,
+    description: 'placeholder description for relationCreators',
     type: typeMap.String //success/error
   };
 
@@ -218,6 +220,8 @@ function createRelationCreators(creatorName, relationName, tables, table1Name, t
 
 function createRelationRemovers(destroyerName, relationName, tables, table1Name, table2Name, mutationFields, typeMap){
   mutationFields[destroyerName] = {
+    name: destroyerName,
+    description: 'placeholder description for relationRemovers',
     type: typeMap.String //success/error
   };
 
