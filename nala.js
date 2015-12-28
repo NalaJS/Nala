@@ -6,6 +6,8 @@ import createGetters from './lib/CreateGetters';
 import createAdders from './lib/CreateAdders';
 import createUpdaters from './lib/CreateUpdaters';
 import createDestroyers from './lib/CreateDestroyers';
+import createRelationCreators from './lib/RelationCreators';
+import createRelationRemovers from './lib/RelationRemovers';
 
 import util from 'util';
 
@@ -71,7 +73,6 @@ function Nala(schema,uri){
     var relation = relationsArray[i][1].name;
     var type = relationsArray[i][0];
     var typeUpper = relationsArray[i][0].charAt(0).toUpperCase()+relationsArray[i][0].slice(1);
-
 
     schema._typeMap[type]._fields[relation].resolve = (root, {name})=>{
       return tables[typeUpper].
@@ -164,95 +165,8 @@ function initSequelizeRelations(relations, typeMap, mutationFields){
     }
 
     createRelationCreators(creatorName, relationName, tables, table1Name, table2Name, mutationFields, typeMap)
-
     createRelationRemovers(destroyerName, relationName, tables, table1Name, table2Name, mutationFields, typeMap)
   }
-}
-
-/*
-Creator
-params:
-mutationFields
-creatorName
-typeMap
-tables
-table1Name
-table2Name
-relationName
-*/
-function createRelationCreators(creatorName, relationName, tables, table1Name, table2Name, mutationFields, typeMap){
-  mutationFields[creatorName] = {
-    name: creatorName,
-    description: 'placeholder description for relationCreators',
-    type: typeMap.String //success/error
-  };
-
-  mutationFields[creatorName].args = [{
-    name: 'model1',
-    type: typeMap.String,
-    description: null,
-    defaultValue: null
-  },
-  {
-    name: 'model2',
-    type: typeMap.String,//[modelFields[field].type.name],
-    description: null,
-    defaultValue: null
-  }];
-
-  mutationFields[creatorName].resolve = (root, {model1, model2})=>{
-      // console.log('in resolve of',creatorName);
-      var m1 = JSON.parse(model1);
-      var m2 = JSON.parse(model2);
-      // console.log('add'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1));
-          tables[table1Name].findOne({
-              where: m1//{name: model1}
-            }).then(function(found1, created){
-              tables[table2Name].findOne({
-                where: m2//{name: model2}
-              }).then(function(found2, created){
-                //TODO: currently hacky way of turning addFriends -> addFriend, which is created by Sequelize
-                found1['add'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1)](found2);
-              })
-            });
-        }
-}
-
-function createRelationRemovers(destroyerName, relationName, tables, table1Name, table2Name, mutationFields, typeMap){
-  mutationFields[destroyerName] = {
-    name: destroyerName,
-    description: 'placeholder description for relationRemovers',
-    type: typeMap.String //success/error
-  };
-
-  mutationFields[destroyerName].args = [{
-    name: 'model1',
-    type: typeMap.String,
-    description: null,
-    defaultValue: null
-  },
-  {
-    name: 'model2',
-    type: typeMap.String,//[modelFields[field].type.name],
-    description: null,
-    defaultValue: null
-  }];
-
-  mutationFields[destroyerName].resolve = (root, {model1, model2})=>{
-      var m1 = JSON.parse(model1);
-      var m2 = JSON.parse(model2);
-      // console.log('remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1));
-          tables[table1Name].findOne({
-              where: m1
-            }).then(function(found1, created){
-              tables[table2Name].findOne({
-                where: m2
-              }).then(function(found2, created){
-                //TODO: currently hacky way of turning addFriends -> addFriend, which is created by Sequelize
-                found1['remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1,relationName.length-1)](found2);
-              })
-            });
-        }
 }
 
 module.exports = Nala;
