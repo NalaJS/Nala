@@ -34,8 +34,8 @@ async function graphQLHandler(req, res, schema){
 function Nala(schema,uri){
   //TODO: eventually parse uri for different dbs
   var sequelize = new Sequelize(uri);
-  var QUERY_FIELDS = schema._schemaConfig.query._fields;
-  var MUTATION_FIELDS = schema._schemaConfig.mutation._fields;
+  var QUERY_FIELDS = schema._queryType._fields;
+  var MUTATION_FIELDS = schema._mutationType._fields;
 
   //extract user defined GraphQL schemas that we want to convert into sequelize schemas
   //we filter out the non-user defined ones by comparing them to defaultNames
@@ -69,16 +69,20 @@ function Nala(schema,uri){
   //initialize sequelize relations TODO: currently works for belongsToMany
   initSequelizeRelations(relationsArray, schema._typeMap, MUTATION_FIELDS);
 
+  // Relation Getters
+  // this sets all the relation fields in the GraphQL models to retrieve relations
   for (var i = 0; i < relationsArray.length; i++){
     var relation = relationsArray[i][1].name;
     var type = relationsArray[i][0];
     var typeUpper = relationsArray[i][0].charAt(0).toUpperCase()+relationsArray[i][0].slice(1);
+    var relationUpper = relationsArray[i][1].name.charAt(0).toUpperCase() + relationsArray[i][1].name.slice(1);
 
+    //TODO: eventually allow args for constraints e.g. friends(limit 5 or name='Tom')
     schema._typeMap[type]._fields[relation].resolve = (root, {name})=>{
       return tables[typeUpper].
         findOne({where: {name : root.name}})
-          .then(function(user){
-              return user.getFriends();
+          .then(function(model){
+              return model['get'+relationUpper]();//.getFriends();
           })
     }
   }
@@ -91,6 +95,7 @@ function Nala(schema,uri){
   }
 }
 
+//TODO: currently doesn't handle GraphQLList(GraphQLStaticType)
 function initSequelizeModels(sequelizeSchemas, sequelize){
   // take each schema, get its toUppercase name
   // add and sequelize define it to tables[modelName],
@@ -124,7 +129,10 @@ function convertSchema(modelNames, typeMap){
       //     model._fields[fields[j]].type.constructor === GraphQLObject)
       // OR (bring in ScalarType when ready to handle non list as well)
       // if (model._fields[fields[j]].type.constructor !== GraphQLScalarType)
-      if (model._fields[fields[j]].type.constructor === GraphQLList) {
+
+      // if it is a list with non scalar type or if it is non scalar type, it is a relation
+      if ( (model._fields[fields[j]].type.constructor === GraphQLList /*&&
+            model._fields[fields[j]].type.ofType.constructor.name !== 'GraphQLScalarType'*/)) {
         relationsArray.push([model.name, model._fields[fields[j]]]);
         //console.log('relationsarray',relationsArray[0][1]); //gqllist obj (e.g. friends)
         //console.log('relationsarray',relationsArray[0][0]); //gqllist type (e.g. user)
@@ -143,34 +151,37 @@ function convertSchema(modelNames, typeMap){
 }
 
 function initSequelizeRelations(relations, typeMap, mutationFields){
-  for(var i = 0; i < relations.length; i++){
+  for (var i = 0; i < relations.length; i++){
+    if (relations[i][1].type.constructor.name === 'GraphQLList') {
+      var modelName = relations[i][0]; //e.g. artist
+      var table1Name = modelName.charAt(0).toUpperCase()+modelName.slice(1); //e.g. Artist
+      var table2Name = relations[i][1].type.ofType.name.charAt(0).toUpperCase()
+                       + relations[i][1].type.ofType.name.slice(1);//e.g Album
+      var relationName = relations[i][1].name; //e.g. album-artists_table // friends
+      var getterName = 'get'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//getFriends
+      var creatorName = 'add'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//addFriends
+      var destroyerName = 'remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//removeFriends
 
-    var modelName = relations[i][0];
-    var table1Name = modelName.charAt(0).toUpperCase()+modelName.slice(1);
-    var table2Name = relations[i][1].type.ofType.name.charAt(0).toUpperCase()
-                     + relations[i][1].type.ofType.name.slice(1);
-    var relationName = relations[i][1].name;
-    var getterName = 'get'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//getFriends
-    var creatorName = 'add'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//addFriends
-    var destroyerName = 'remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//removeFriends
+      var relationTableName = relationName+'_table'; //friends_table
+      // console.log('relationTableName',relationTableName);
 
-    var relationTableName = relationName+'_table'; //friends_table
-    // console.log('relationTableName',relationTableName);
+      // console.log(table1Name, table2Name, relationName, relationTableName);
+      tables[table1Name].belongsToMany(tables[table2Name],{as : relationName, through: relationTableName});
 
-    //console.log(table1Name, table2Name, relationName, relationTableName);
-    tables[table1Name].belongsToMany(tables[table2Name],{as : relationName, through: relationTableName});
+      //relations getter
+      typeMap[modelName]._fields[relationName].resolve = (root)=>{
+        return tables[table1Name].
+          findOne({where: {name : root.name}})
+            .then(function(model){
+                return model[getterName]();
+            })
+      }
 
-    //relations getter
-    typeMap[modelName]._fields[relationName].resolve = (root)=>{
-      return tables[table1Name].
-        findOne({where: {name : root.name}})
-          .then(function(model){
-              return model[getterName]();
-          })
+      createRelationCreators(creatorName, relationName, tables, table1Name, table2Name, mutationFields, typeMap)
+      createRelationRemovers(destroyerName, relationName, tables, table1Name, table2Name, mutationFields, typeMap)
+    } else if (relations[i][1].type.constructor.name === 'GraphQLObjectType') {
+      // TODO: handle if relation isn't graphql list. One to one?
     }
-
-    createRelationCreators(creatorName, relationName, tables, table1Name, table2Name, mutationFields, typeMap)
-    createRelationRemovers(destroyerName, relationName, tables, table1Name, table2Name, mutationFields, typeMap)
   }
 }
 
