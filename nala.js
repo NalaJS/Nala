@@ -112,20 +112,25 @@ function convertSchema(modelNames, typeMap){
         fields = Object.keys(model._fields), //['name', 'age']
         sequelizeSchema = {},
         sequelizeFieldTypes = {String: Sequelize.STRING, Int: Sequelize.INTEGER};
+
     //console.log(fields); //expect ['name','age','friends']
     for(var j = 0; j < fields.length; j++) {
       //console.log(model._fields[fields[j]].type.name); //undefined for 'friends'
-      //if model._fields[fields[j]].type.name is undefined,
-      //check to see if there is ofType (which seems to denote that it is a list)
-      //ofType.name should return the list type
-      //if type.ofType is defined, it is GraphQLList.
-      if (model._fields[fields[j]].type.ofType){
-        relationsArray.push([model.name,model._fields[fields[j]]]);
-        // console.log('relationsarray',relationsArray[0][1].name);
-        // console.log('relationsarray',relationsArray[0][0]);
+      //if model._fields[fields[j]].type.name is undefined, it is not scalar
+      // model._fields[fields[j]].type.ofType.name gives the type of the GraphQLList
+
+      // TODO: handle non GQLList associations
+      // if (model._fields[fields[j]].type.constructor === GraphQLList ||
+      //     model._fields[fields[j]].type.constructor === GraphQLObject)
+      // OR (bring in ScalarType when ready to handle non list as well)
+      // if (model._fields[fields[j]].type.constructor !== GraphQLScalarType)
+      if (model._fields[fields[j]].type.constructor === GraphQLList) {
+        relationsArray.push([model.name, model._fields[fields[j]]]);
+        //console.log('relationsarray',relationsArray[0][1]); //gqllist obj (e.g. friends)
+        //console.log('relationsarray',relationsArray[0][0]); //gqllist type (e.g. user)
 
       }
-      else { //isn't list
+      else { // is ScalarType
         sequelizeSchema[fields[j]] = {
           type: sequelizeFieldTypes[model._fields[fields[j]].type.name],
           field: fields[j]
@@ -134,7 +139,7 @@ function convertSchema(modelNames, typeMap){
     }
     sequelizeArr.push([modelNames[i], sequelizeSchema]);
   }
-    return sequelizeArr;
+  return sequelizeArr;
 }
 
 function initSequelizeRelations(relations, typeMap, mutationFields){
