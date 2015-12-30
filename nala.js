@@ -69,23 +69,6 @@ function Nala(schema,uri){
   //initialize sequelize relations TODO: currently works for belongsToMany
   initSequelizeRelations(relationsArray, schema._typeMap, MUTATION_FIELDS);
 
-  // Relation Getters
-  // this sets all the relation fields in the GraphQL models to retrieve relations
-  for (var i = 0; i < relationsArray.length; i++){
-    var relation = relationsArray[i][1].name;
-    var type = relationsArray[i][0];
-    var typeUpper = relationsArray[i][0].charAt(0).toUpperCase()+relationsArray[i][0].slice(1);
-    var relationUpper = relationsArray[i][1].name.charAt(0).toUpperCase() + relationsArray[i][1].name.slice(1);
-
-    //TODO: eventually allow args for constraints e.g. friends(limit 5 or name='Tom')
-    schema._typeMap[type]._fields[relation].resolve = (root, {name})=>{
-      return tables[typeUpper].
-        findOne({where: {name : root.name}})
-          .then(function(model){
-              return model['get'+relationUpper]();//.getFriends();
-          })
-    }
-  }
   sequelize.sync();
 
   //console.log(util.inspect(QUERY_FIELDS.getUser.args, {showHidden: false, depth :null} ));
@@ -150,39 +133,63 @@ function convertSchema(modelNames, typeMap){
   return sequelizeArr;
 }
 
+// determines the relation (1:1, 1:n, n:m)
+// once relationship is determined, set up get, add, rm Relations
 function initSequelizeRelations(relations, typeMap, mutationFields){
   for (var i = 0; i < relations.length; i++){
+
+    // if gqllist, n:m or 1:n
     if (relations[i][1].type.constructor.name === 'GraphQLList') {
-      var modelName = relations[i][0]; //e.g. artist
-      var table1Name = modelName.charAt(0).toUpperCase()+modelName.slice(1); //e.g. Artist
-      var table2Name = relations[i][1].type.ofType.name.charAt(0).toUpperCase()
-                       + relations[i][1].type.ofType.name.slice(1);//e.g Album
-      var relationName = relations[i][1].name; //e.g. album-artists_table // friends
-      var getterName = 'get'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//getFriends
-      var creatorName = 'add'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//addFriends
-      var destroyerName = 'remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//removeFriends
-
-      var relationTableName = relationName+'_table'; //friends_table
-      // console.log('relationTableName',relationTableName);
-
-      // console.log(table1Name, table2Name, relationName, relationTableName);
-      tables[table1Name].belongsToMany(tables[table2Name],{as : relationName, through: relationTableName});
-
-      //relations getter
-      typeMap[modelName]._fields[relationName].resolve = (root)=>{
-        return tables[table1Name].
-          findOne({where: {name : root.name}})
-            .then(function(model){
-                return model[getterName]();
-            })
-      }
-
-      createRelationCreators(creatorName, relationName, tables, table1Name, table2Name, mutationFields, typeMap)
-      createRelationRemovers(destroyerName, relationName, tables, table1Name, table2Name, mutationFields, typeMap)
-    } else if (relations[i][1].type.constructor.name === 'GraphQLObjectType') {
+      initToManyRelations(relations[i], typeMap, mutationFields);
+    }
+    // if not gqllist, 1:1 or 1:n
+    else if (relations[i][1].type.constructor.name === 'GraphQLObjectType') {
       // TODO: handle if relation isn't graphql list. One to one?
+      initToOneRelations(relations[i], typeMap, mutationFields);
     }
   }
+}
+
+function initToManyRelations(relation, typeMap, mutationFields) {
+  var modelName = relation[0]; //e.g. artist
+  var table1Name = modelName.charAt(0).toUpperCase()+modelName.slice(1); //e.g. Artist
+  var table2Name = relation[1].type.ofType.name.charAt(0).toUpperCase()
+                   + relation[1].type.ofType.name.slice(1);//e.g Album
+  var relationName = relation[1].name; //e.g. album-artists_table // friends
+  var getterName = 'get'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//getFriends
+  var creatorName = 'add'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//addFriends
+  var destroyerName = 'remove'+relationName.charAt(0).toUpperCase()+relationName.slice(1);//removeFriends
+
+
+  var relationTableName = relationName+'_table'; //friends_table
+  // console.log('relationTableName',relationTableName);
+
+  // console.log(table1Name, table2Name, relationName, relationTableName);
+  tables[table1Name].belongsToMany(tables[table2Name],{as : relationName, through: relationTableName});
+
+  //relations getter
+  //TODO: eventually allow args for constraints e.g. friends(limit 5 or name='Tom')
+  typeMap[modelName]._fields[relationName].resolve = (root)=>{
+    return tables[table1Name].
+      findOne({where: {name : root.name}})
+        .then(function(model){
+            return model[getterName]();
+        })
+  };
+
+  createRelationCreators(creatorName, relationName, tables, table1Name, table2Name, mutationFields, typeMap);
+  createRelationRemovers(destroyerName, relationName, tables, table1Name, table2Name, mutationFields, typeMap);
+}
+
+function initToOneRelations(relation, typeMap, mutationFields) {
+  //1:1 needs get, set, create
+  var modelName = relation[0]; //artist
+  var table1Name = relation[0].toUpperCase()+modelName.slice(1); //Artist
+  var table2Name = relation[1].type.ofType.name.charAt(0).toUpperCase()
+                   + relation[1].type.ofType.name.slice(1);//e.g Album
+  var getterName = 'get' + table2Name;
+  var setterName = 'set' + table2Name;
+  var creatorName = 'create' + table2Name;
 }
 
 module.exports = Nala;

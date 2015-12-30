@@ -14,7 +14,7 @@
     "body-parser": "^1.13.3",
     "browserify": "^11.0.1",
     "express": "^4.13.3",
-    "graphql": "^0.4.3",
+    "graphql": "^0.4.14",
     "gulp": "^3.9.0",
     "gulp-notify": "^2.2.0",
     "jquery": "^2.1.4",
