@@ -1,5 +1,5 @@
 {
-  "name": "graphql_sample",
+  "name": "Nala",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js"
   },
-  "author": "",
+  "author": "Ben Tan, Ken Kaiser, Enyu Hsu, Matt Eubanks",
   "license": "ISC",
   "dependencies": {
     "babel": "^5.8.23",

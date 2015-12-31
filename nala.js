@@ -6,8 +6,8 @@ import createGetters from './lib/CreateGetters';
 import createAdders from './lib/CreateAdders';
 import createUpdaters from './lib/CreateUpdaters';
 import createDestroyers from './lib/CreateDestroyers';
-import createRelationCreators from './lib/RelationCreators';
-import createRelationRemovers from './lib/RelationRemovers';
+import createRelationCreators from './lib/relations/n:m/RelationCreators';
+import createRelationRemovers from './lib/relations/n:m/RelationRemovers';
 
 import util from 'util';
 
@@ -121,6 +121,12 @@ function convertSchema(modelNames, typeMap){
         //console.log('relationsarray',relationsArray[0][0]); //gqllist type (e.g. user)
 
       }
+      //TODO: determine if self referencing is only issue. might be if it is any
+      // user defined model at all
+      // if self referencing, e.g. userType has a 'spouse' of userType
+      else if (modelNames[i] === model._fields[fields[j]].type.name) {
+        //TODO: defer init self referencing till later
+      }
       else { // is ScalarType
         sequelizeSchema[fields[j]] = {
           type: sequelizeFieldTypes[model._fields[fields[j]].type.name],
@@ -190,6 +196,43 @@ function initToOneRelations(relation, typeMap, mutationFields) {
   var getterName = 'get' + table2Name;
   var setterName = 'set' + table2Name;
   var creatorName = 'create' + table2Name;
+
+  //tables[table1Name].belongsTo(tables[table2Name]);
+
+  console.log(table1Name, table2Name);
+  //getAlbum:
+  // typeMap[modelName]._fields[table2Name]
+
+  //setAlbum:
+
+
 }
+
+function createRelation_singular(queryFields, getterName, typeMap) {
+  queryFields[getterName] = {
+    name: getterName,
+    description: 'placeholder description for 1:1 relation getter',
+    type: typeMap.String //success/error
+  };
+
+  //find out what args getAlbum can take and establish
+  // args are any possible combination of args in the model
+
+  //resolve
+  queryFields[getterName].resolve = (root)=>{
+
+  };
+
+
+}
+
+function getRelation_singular() {
+
+}
+
+function setRelation_singular() {
+
+}
+
 
 module.exports = Nala;
