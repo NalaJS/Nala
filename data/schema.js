@@ -21,6 +21,10 @@ let userType = new GraphQLObjectType({
         type: new GraphQLList(userType),
         description: 'Returns friends of the user. Returns empty array if user has no friends',
       },
+      // 'nicknames' : {
+      //   type: new GraphQLList(GraphQLString),
+      //   description: 'array of strings'
+      // },
       // 'spouse' : {
       //   type: userType,
       //   description: 'Returns the leader of the user, which is also of userType'

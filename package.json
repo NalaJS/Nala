@@ -1,5 +1,5 @@
 {
-  "name": "graphql_sample",
+  "name": "Nala",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,14 +7,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js"
   },
-  "author": "",
+  "author": "Ben Tan, Ken Kaiser, Enyu Hsu, Matt Eubanks",
   "license": "ISC",
   "dependencies": {
     "babel": "^5.8.23",
     "body-parser": "^1.13.3",
     "browserify": "^11.0.1",
     "express": "^4.13.3",
-    "graphql": "^0.4.3",
+    "graphql": "^0.4.14",
     "gulp": "^3.9.0",
     "gulp-notify": "^2.2.0",
     "jquery": "^2.1.4",
