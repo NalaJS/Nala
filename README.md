@@ -84,5 +84,123 @@ let userType = new GraphQLObjectType({
 });
 ```
 
+### Queries and Mutations
 
-###
+#### Introduction
+Three of the four CRUD operations to the database, namely Addition(Creation), Getting(Retrieval), and Destroying(Deletion) only need search parameters passed to them, e.g. 
+
+```javascript
+var userObject = {
+    name : 'Kylo',
+    species : 'Human',
+    gender : 'Male',
+    birthyear : '??',
+    homeworld : '??'
+}
+```
+By passing `userObject` as a variable to `getUser`, or `destroyUser`, we will find the user that matches the parameters and return it or destroy it, respectively. In the case of `addUser`, we will create a user object in the database with those parameters.
+
+Note that we can include and omit any combination of the parameters, so we can search by only `name` and `species` or by all the parameters as shown above.
+
+#### Adding to database
+```javascript
+addUser: function(userObject) {
+
+      var user = userObject;
+      var mutation = {
+      //this assumes we're only interested in looking for the user who matches a given name and species
+        'mutation' : `
+          mutation mutateUser($name:String, $species:String){
+            addUser(name: $name, species: $species){
+              name,
+              species
+            }
+          }`,
+        // declare the variables you want to pass along with the query
+        'variables': userObject
+      };
+      $.post('/graphql', mutation, function(response) {
+        var user = response.data.getUser;
+        // do something with information
+      });
+    }
+```
+The response will be the newly created User object in the database. Adding multiple users at once is currently not supported.
+
+#### Retrieving from database
+
+##### Retrieving a single instance
+```javascript
+getUser: function(userObject) {
+
+      var user = userObject;
+      var query = {
+      //this assumes we're only interested in looking for the user who matches a given name and species
+        'query' : `
+          query queryUser($name:String, $species:String){
+            getUser(name: $name, species: $species){
+              name,
+              species
+            }
+          }`,
+        // declare the variables you want to pass along with the query
+        'variables': userObject
+      };
+      $.post('/graphql', query, function(response) {
+        var user = response.data.getUser;
+        // do something with information
+      });
+    }
+```
+
+##### Retrieving multiple instances
+
+This slightly less trivial example shows us how we might find all users of a certain `species` who come from a given `homeworld`.
+Simply add an 's' after the model name in getModel to search for all instances that satisfy the search parameters.
+```javascript
+getUser: function(userObject) {
+
+      var user = userObject;
+      var query = {
+      //this assumes we're only interested in looking for the user who matches a given name and species
+        'query' : `
+          query queryUser($homeworld:String, $species:String){
+            getUsers(homeworld: $homeworld, species: $species){
+              name,
+              birthyear,
+              friends {
+                name
+              }
+            }
+          }`,
+        // declare the variables you want to pass along with the query
+        'variables': userObject
+      };
+      $.post('/graphql', query, function(response) {
+        var user = response.data.getUser;
+        // do something with information
+      });
+    }
+```
+
+
+#### Deleting from database
+```javascript
+removeUser: function(userObject) {
+
+      var user = userObject;
+      var mutation = {
+        'mutation' : `
+          mutation mutateUser($name:String, $species:String, $homeworld:String){
+            destroyUser(name: $name, species: $species, homeworld: $homeworld){
+              name,
+              species,
+              homeworld
+            }
+          }`,
+        // declare the variables you want to pass along with the query
+        'variables': userObject
+      };
+      $.post('/graphql', mutation);
+    }
+```
