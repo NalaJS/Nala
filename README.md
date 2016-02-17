@@ -11,6 +11,7 @@ let graphQLHandler = Nala(Schema, 'postgres://localhost/example_database');
 ```
 Nala takes in two inputs: a GraphQL `Schema` and a database URI.
 
+
 ### Handling a query
 Nala returns a graphQLHandler to which you can pass GraphQL requests:
 ```javascript
@@ -18,6 +19,7 @@ Nala returns a graphQLHandler to which you can pass GraphQL requests:
 app.use('/graphql', graphQLHandler);
 ```
 `graphQLHandler` will resolve requests based on the `Schema` provided.
+
 
 ### Automatic database model and association generation
 Typically in your GraphQL `schema`, you define both your GraphQL models and their corresponding database models. Note that below you also explicitly define the association between two models, in this case, `User` with another `User` as friends.
@@ -204,3 +206,27 @@ removeUser: function(userObject) {
       $.post('/graphql', mutation);
     }
 ```
+
+#### Updating an instance
+Updating is different from the other CRUD operations in that there is a need to distinguish from the selectors (i.e. find name: 'Tom') and the parameters to be updated (i.e. change age: 23). Rather than provide many variations of updateUser to account for what the developer might want, simply prepend an underscore(_) to denote your selectors.
+
+```javascript
+updateUser: function(userObject) {
+
+      var user = userObject;
+      var mutation = {
+        'mutation' : `
+          mutation mutateUser($name:String, $homeworld:String){
+            updateUser(_name: $name, homeworld: $homeworld){
+              name,
+              species,
+              homeworld
+            }
+          }`,
+        // declare the variables you want to pass along with the query
+        'variables': userObject
+      };
+      $.post('/graphql', mutation);
+    }
+```
+Notice the underscore before name in updateUser. In this case, we search for the user who matches the provided name and update their homeworld.
